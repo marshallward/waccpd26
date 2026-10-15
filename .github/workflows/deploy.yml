@@ -1,0 +1,64 @@
+name: Deploy presentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-presentation
+  cancel-in-progress: false
+
+env:
+  REVEAL_VERSION: 5.2.1
+  PRESENTATION: waccpd26
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out presentation
+        uses: actions/checkout@v5
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pandoc poppler-utils
+
+      - name: Download Reveal.js
+        shell: bash
+        run: |
+          mkdir -p reveal.js
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/hakimel/reveal.js/archive/refs/tags/${REVEAL_VERSION}.tar.gz" \
+            | tar -xz --strip-components=1 -C reveal.js
+
+      - name: Build presentation
+        run: make
+
+      - name: Stage deployment
+        shell: bash
+        run: |
+          destination="public/${PRESENTATION}"
+          mkdir -p "${destination}/reveal.js/css/theme"
+          cp index.html "${destination}/"
+          cp -a img "${destination}/"
+          cp -a reveal.js/dist reveal.js/plugin "${destination}/reveal.js/"
+          cp reveal.js/LICENSE "${destination}/reveal.js/"
+          cp reveal.js/css/theme/gfdl.css "${destination}/reveal.js/css/theme/"
+
+      - name: Deploy to marshallward.org
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.PAGES_DEPLOY_KEY }}
+          external_repository: marshallward/marshallward.github.io
+          publish_branch: master
+          publish_dir: ./public
+          destination_dir: .
+          keep_files: true
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com

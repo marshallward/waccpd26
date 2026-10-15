@@ -1,0 +1,17 @@
+# Build and deployment output
+/index.html
+/public/
+/reveal.js/
+/master.zip
+
+# Generated figure SVGs; retain static assets until their sources are included.
+/img/*
+!/img/bg_gfdl.jpg
+!/img/gyre.png
+!/img/fms_mpi.svg
+!/img/block_loop_title.svg
+!/img/corad_blocks.svg
+
+# Python build artifacts
+__pycache__/
+*.pyc
