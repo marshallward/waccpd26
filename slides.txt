@@ -352,9 +352,9 @@ Largest-domain speedups: viscosity ~1.2×; pressure/barotropic ~7.4–7.5×.
    which loops may be concurrent and which must remain ordered, but realized
    performance also depends on memory access, private storage, launch counts,
    reductions, and the compiler. Integrated speedup is determined by the
-   remaining costs, not an average of these module speedups. The figure's
-   embedded range title is inherited from the manuscript; the plotted area
-   scale and reported sweep use the 64 by 64 reference grid.
+   remaining costs, not an average of these module speedups. The figure is
+   regenerated from the manuscript logs; its range title now matches the
+   plotted sweep and the 64 by 64 reference grid.
 
 
 The resident model extends across GPUs
@@ -362,18 +362,21 @@ The resident model extends across GPUs
 
 .. image:: img/dycore_speedup.svg
    :height: 450px
-   :alt: Fixed-domain speedup from one to ten H100 GPUs for three global domain sizes.
+   :alt: Fixed-domain speedup versus H100 GPU count for 256 by 256, 512 by 512, and 1024 by 1024 domains, with an ideal-scaling reference.
 
 Up to **6.1× on 10 H100s**, relative to one H100.
 
 .. container:: notes
 
-   [12:00–13:15] This is now a fixed-global-domain strong-scaling test, on
-   H100s rather than the GH200 used in the single-device comparison. Two GPUs
+   [12:00–13:15] This reproduces the manuscript's fixed-domain strong-scaling
+   view using H100s rather than the GH200 of the single-device comparison.
+   The horizontal axis is GPU count; each curve fixes the global domain.
+   Speedup is relative to one H100 for that same domain. The dashed line
+   denotes ideal scaling. Two GPUs
    per node, up to five nodes. FMS packs and unpacks resident halo buffers on
    the GPU and passes device pointers to GPU-aware MPI. The largest domain
-   reaches about 6.1 times speedup at ten GPUs; the smallest reaches only about
-   1.4 times as local work shrinks and communication dominates. Importantly,
+   reaches about 6.1 times speedup at ten GPUs; the smallest reaches only
+   about 1.4 times as local work shrinks and communication dominates. Importantly,
    GPU-aware MPI does not imply a direct GPU transport: this system lacks
    NVLink and GPUDirect RDMA, and communication is staged through host memory
    and PCIe over NDR-200 InfiniBand. The result demonstrates the distributed
@@ -527,22 +530,22 @@ The transport beneath MPI remains system-dependent.
    not be used interchangeably.
 
 
-Backup: module-level strong scaling
------------------------------------
+Backup: module-level H100 timings
+---------------------------------
 
-.. image:: img/module_speedup.svg
+.. image:: img/h100_module_timings.svg
    :height: 440px
-   :alt: Per-module fixed-domain speedup across H100 GPUs.
+   :alt: Six module timing panels versus horizontal domain area, with a curve for each H100 count.
 
 Barotropic stepping includes communication in its timed region.
 
 .. container:: notes
 
-   Backup only. For the largest fixed domain, advection, continuity, and
-   vertical friction have the strongest ten-GPU speedups. Pressure force and
-   barotropic stepping scale less well; barotropic internal communication is
-   a significant constraint. This is distinct from their strong single-device
-   gains at large problem size.
+   Backup only. The horizontal axis is global domain area, and each curve
+   represents a fixed GPU count. Compare times at the same x value to assess
+   the effect of adding GPUs for a fixed domain. Barotropic stepping includes
+   internal communication in its timed region. These are raw time-per-step
+   curves, not speedup panels; a dedicated speedup view is deferred.
 
 
 Backup: derived-type lifetimes

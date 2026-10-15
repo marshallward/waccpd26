@@ -4,13 +4,17 @@
 /reveal.js/
 /master.zip
 
-# Generated figure SVGs; retain static assets until their sources are included.
+# Generated figures; retain assets without local generators/data.
 /img/*
 !/img/bg_gfdl.jpg
 !/img/gyre.png
-!/img/fms_mpi.svg
-!/img/block_loop_title.svg
 !/img/corad_blocks.svg
+
+# Superseded PDF inputs (retained locally as references).
+/figures/*.pdf
+
+# Local Python environment
+/.venv/
 
 # Python build artifacts
 __pycache__/
