@@ -2,6 +2,7 @@ THEME = gfdl
 PYTHON = python3
 ASY = asy
 D2 = d2
+REVEAL_VERSION = 5.2.1
 export MPLBACKEND = Agg
 FLAGS = -s -f rst -t revealjs --slide-level=2 \
         -V revealjs-url=./reveal.js -V theme=$(THEME) \
@@ -27,7 +28,19 @@ figures: $(FIGURES)
 index.html: slides.txt Makefile gfdl.revealjs reveal.js/css/theme/gfdl.css $(FIGURES) $(STATIC_ASSETS)
 	pandoc $(FLAGS) $< -o $@
 
-reveal.js/css/theme/gfdl.css: gfdl.css
+reveal.js/dist/reveal.js:
+	@set -eu; \
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT HUP INT TERM; \
+	curl --fail --silent --show-error --location --retry 3 \
+	  "https://github.com/hakimel/reveal.js/archive/refs/tags/$(REVEAL_VERSION).tar.gz" \
+	  -o "$$tmp/reveal.tar.gz"; \
+	mkdir "$$tmp/reveal"; \
+	tar -xzf "$$tmp/reveal.tar.gz" --strip-components=1 -C "$$tmp/reveal"; \
+	mkdir -p reveal.js; \
+	cp -a "$$tmp/reveal/." reveal.js/
+
+reveal.js/css/theme/gfdl.css: gfdl.css | reveal.js/dist/reveal.js
 	mkdir -p $(@D)
 	cp $< $@
 

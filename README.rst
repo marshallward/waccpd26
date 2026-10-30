@@ -20,10 +20,12 @@ with backgrounds enabled. Backup slides are included in the printout.
 
 Edit ``slides.txt``, then run ``make``. Build requirements: Pandoc, Python 3.13
 (as used in CI), the packages in ``requirements.txt``, D2 (0.9.0 in CI),
-Asymptote, dvisvgm, and
-LaTeX with its recommended packages/fonts, plus a local Reveal.js installation
-in ``reveal.js/``. Liberation fonts are used for plots where available.
-Reveal.js is not tracked in Git; the deployment workflow downloads version 5.2.1.
+Asymptote, dvisvgm, curl, tar, and
+LaTeX with its recommended packages/fonts. Liberation fonts are used for plots
+where available. The Makefile downloads Reveal.js into ``reveal.js/`` if
+``reveal.js/dist/reveal.js`` is missing, using version 5.2.1 pinned in
+``REVEAL_VERSION``. Local builds and deployment use the same rule.
+Reveal.js is not tracked in Git; an existing installation is reused.
 Viewing the built presentation needs no CDN.
 
 For a fresh local checkout, install the system dependencies above, then:
@@ -33,13 +35,13 @@ For a fresh local checkout, install the system dependencies above, then:
    python3 -m venv .venv
    . .venv/bin/activate
    python -m pip install -r requirements.txt
-   mkdir -p reveal.js
-   curl -fsSL https://github.com/hakimel/reveal.js/archive/refs/tags/5.2.1.tar.gz \
-     | tar -xz --strip-components=1 -C reveal.js
    make serve
 
 ``make figures`` regenerates just the seven generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
+It also preserves Reveal.js, so subsequent builds can work offline. To install
+a different Reveal.js version, remove ``reveal.js/`` and rebuild with
+``make REVEAL_VERSION=<version>``.
 
 Deployment
 ----------
