@@ -15,11 +15,23 @@ Single-device comparison
 ``arm_20260809/``
    One GH200 GPU.
 
+``gh200_p1_20261109/``
+   New one-GH200 run series supplied November 9, 2026. Used for the primary
+   main-loop time-per-step figure. A vertical subslide overlays it with the
+   August series; the six-module panels also retain both series, with
+   date-specific legend labels. Both speedup curves use the same EPYC baseline, matching
+   configuration numbers and the existing per-step normalization.
+   Build/compiler/configuration equivalence
+   between the two GPU series has not been independently established here;
+   do not attribute the difference to a particular optimization without review.
+
 ``gen_plot.py`` generates the main-loop and six-module figures. Configuration
 numbers encode horizontal area relative to 32 × 32. The Makefile excludes
 configurations below 4 and divides the displayed scale by 4, so the plotted
 reference is 64 × 64 and the largest displayed area factor is 256.
-Vertical resolution is 100 levels. The main-loop figure includes speedup;
+Vertical resolution is 100 levels in the original experiment. The main-loop
+comparison includes a separate speedup curve for each GPU run series, while
+the primary figure shows only November. Both speedup panels extend to at least 3.5×;
 module panels report time per step. Plot options and sizes follow the
 manuscript's Makefile, with the module title corrected to the plotted range.
 

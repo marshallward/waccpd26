@@ -49,49 +49,51 @@ Port the model, not just an isolated kernel.
 Solvers of MOM6
 ===============
 
+.. container:: solver-ocean
+
+   .. image:: img/ocean_layers.svg
+      :alt: Schematic moving ocean layers with a horizontal layer and a full-depth column highlighted.
+
+.. raw:: html
+
+   <svg class="solver-branches" viewBox="0 0 1200 48" aria-hidden="true">
+     <path d="M600 0 V12 M600 12 L200 46 M600 12 V46 M600 12 L1000 46"
+       fill="none" stroke="currentColor" stroke-width="2" opacity="0.65"/>
+   </svg>
+
 .. container:: solver-grid
 
    .. container:: solver-card
 
-      **Layered dynamics**
-
       .. image:: img/kernel_layer.svg
          :alt: An ocean grid with a horizontal layer highlighted in teal.
 
-      Advection, horizontal viscosity
-
-      Independent horizontal work;
-      layers may also be concurrent.
+      | Independent horizontal work
+      | Layers may also be concurrent
 
    .. container:: solver-card
-
-      **Columnar physics**
 
       .. image:: img/kernel_column.svg
          :alt: An ocean grid with an independent full-depth column highlighted in orange.
 
-      Vertical friction
-
-      Independent columns;
-      ordered work in depth.
+      | Independent columns
+      | Ordered work in depth
 
    .. container:: solver-card
-
-      **Mixed / sliced domains**
 
       .. image:: img/kernel_slice.svg
          :alt: An ocean grid with an i-k slice highlighted in teal and ordered vertical traversal.
 
-      Pressure, continuity, barotropic
-
-      Horizontal work coupled
-      to vertical accumulation.
-
-No universal loop shape fits the dynamic core.
+      | Horizontal work coupled
+      | to vertical accumulation.
 
 .. container:: notes
 
    [1:30–2:30] The dynamic core advances velocities and layer thicknesses.
+   Start with the ocean-layer sketch: these moving layers use ALE, or
+   Arbitrary Lagrangian–Eulerian coordinates. It is a schematic, not model
+   output. The branches connect the physical domain to three useful
+   computational views; they do not depict a sequence of model operations.
    We classify its computations by dependency, not by the physical equation.
    Layered work offers horizontal concurrency and sometimes concurrency across
    layers. A column solve has horizontal independence but ordered work down
@@ -335,21 +337,26 @@ Fixed resources, increasing problem size — **not weak scaling**.
    1024, and every case has 100 vertical levels.
 
 
-Nearly 3× with enough work
-==========================
+Over 3× with enough work
+========================
 
 .. image:: img/dycore_and_main.svg
    :height: 465px
-   :alt: CPU and GH200 main-loop times and GPU speedup over increasing horizontal domain size.
+   :alt: EPYC CPU and November 9 GH200 main-loop times, with GPU speedup relative to the CPU baseline.
 
 Small domains favor CPU; larger domains amortize GPU overhead.
 
 .. container:: notes
 
    [9:30–10:45] The top panel shows time per step; the bottom shows CPU time
-   divided by GPU time. Small cases provide insufficient work to keep the GPU
+   divided by GPU time. The GPU curve uses the November 9 run series;
+   the CPU reference is unchanged. The vertical subslide preserves the
+   August/November comparison. The module plots also overlay both GPU series,
+   labeled by date. Build/configuration equivalence between the GPU series
+   still needs review before attributing differences to a specific change.
+   Small cases provide insufficient work to keep the GPU
    occupied and amortize fixed launch costs. As the horizontal domain grows,
-   the GPU overtakes the CPU and approaches three times the performance at
+   the GPU overtakes the CPU and reaches about 3.18 times the performance at
    the largest size. The dotted vertical line marks the representative
    384 by 256 by 100 production layout. This is a main-loop result for a
    dynamic-core-focused benchmark, not a claim about the throughput of a full
@@ -358,18 +365,40 @@ Small domains favor CPU; larger domains amortize GPU overhead.
    reductions, communication, and compiler overheads.
 
 
+GH200: August and November
+----------------------------------------
+
+.. image:: img/dycore_and_main_comparison.svg
+   :height: 465px
+   :alt: EPYC CPU main-loop times compared with August 9 and November 9 GH200 series, plus their respective speedups against the same CPU baseline.
+
+Same CPU reference; both GH200 run series.
+
+.. container:: notes
+
+   Optional comparison, outside the main talk's timing budget. The orange
+   August and green November curves share the same recorded CPU baseline and
+   per-step normalization. The colors match between timing and speedup panels.
+   At the largest common domain the speedups are about 2.74 and 3.18 times.
+   These are separate run series, not a controlled attribution of the improvement
+   to a particular optimization. Press Right to continue the main talk.
+
+
 Structure guides porting, not speedup
 =====================================
 
 .. image:: img/module_scaling.svg
    :height: 440px
-   :alt: CPU and GPU timings for six dynamic-core modules across problem sizes.
+   :alt: EPYC CPU timings and August 9 and November 9 GH200 timings for six dynamic-core modules across problem sizes.
 
-Largest-domain speedups: viscosity ~1.2×; pressure/barotropic ~7.4–7.5×.
+August baseline: viscosity ~1.2×; pressure/barotropic ~7.4–7.5× at the largest domain.
 
 .. container:: notes
 
-   [10:45–12:00] Do not walk through every panel. Contrast horizontal
+   [10:45–12:00] Both GPU series are overlaid with the same date labels and
+   colors as the main-loop figure. The quoted speedups below refer to the
+   original August dataset, not the new November overlay.
+   Do not walk through every panel. Contrast horizontal
    viscosity, a seemingly favorable layered solver with only about 1.2 times
    speedup, with the mixed pressure and barotropic components reaching about
    7.4 and 7.5 times. Vertical friction retains serial column work yet reaches

@@ -450,9 +450,28 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  margin: 32px 0;
+  margin: 0 auto 20px;
+  max-width: 1200px;
 }
 .reveal .solver-card { font-size: 0.68em; }
-.reveal .solver-card > p:first-child { font-size: 1.15em; }
-.reveal .solver-card img { width: 100%; max-width: 100%; }
-.reveal .solver-card p { margin: 14px 0; }
+.reveal .solver-card img {
+  width: 100%;
+  max-width: 100%;
+  height: 190px;
+}
+.reveal .solver-card p { margin: 8px 0; }
+.reveal .solver-ocean { font-size: 0.7em; }
+.reveal .solver-ocean p { margin: 4px 0; }
+.reveal .solver-ocean img {
+  width: auto;
+  height: 150px;
+  background: #edf5f6;
+  border-radius: 8px;
+}
+.reveal .solver-branches {
+  display: block;
+  width: 100%;
+  max-width: 1200px;
+  height: 48px;
+  margin: 0 auto;
+}

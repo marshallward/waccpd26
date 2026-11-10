@@ -2,7 +2,8 @@ WACCPD 2026 presentation draft
 =============================
 
 15-minute slot: **16 main slides (including title), 14:30 of planned speech,
-0:30 margin**, plus six vertical backup slides under the conclusion.
+0:30 margin**, plus an optional August/November timing comparison beneath
+the main timing slide and six vertical backup slides under the conclusion.
 Speaker notes and elapsed-time cues are in ``slides.txt`` (reStructuredText).
 
 View and edit
@@ -13,8 +14,9 @@ View and edit
    make serve
 
 Open http://localhost:8000. Press **S** for speaker view, **Esc** for the
-overview, **Right/Space** for the main talk, and **Down** at the conclusion for
-backups. Speaker view requires HTTP serving and permission to open its popup.
+overview, **Right** for the main talk, and **Down** for vertical comparison or
+backup slides. **Space** traverses vertical slides too. Speaker view requires
+HTTP serving and permission to open its popup.
 For PDF printing, open http://localhost:8000/?print-pdf and print landscape
 with backgrounds enabled. Backup slides are included in the printout.
 
@@ -37,7 +39,7 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates the ten generated SVGs. ``make clean``
+``make figures`` regenerates the twelve generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
@@ -86,6 +88,8 @@ Figure generation
      - ``scripts/gen_block_loop_title.py``
    * - Layer, column, and slice solver diagrams
      - ``scripts/gen_kernel_types.py``, adapted from the GTC poster
+   * - Moving ocean-layer schematic
+     - ``scripts/gen_ocean_layers.py``, adapted from the GTC poster
    * - FMS/MPI communication diagram
      - ``d2/fms_mpi.d2`` (copied from the NRL presentation)
 
@@ -114,6 +118,10 @@ and a transparent outer background. These illustrate dependency patterns,
 not literal ocean data or GPU thread layouts. The slice is one useful pattern
 within mixed solvers, not a complete depiction of all their phases. No GTC
 performance datasets or results are imported into this talk.
+The ocean sketch above the diagrams comes from the poster's
+``scripts/ocean_layers.py``. It schematically depicts moving ALE layers,
+not simulation output; the branching layout relates the ocean domain to
+computational views rather than indicating a sequence of solver execution.
 
 Sources and scope
 -----------------

@@ -312,8 +312,8 @@ def plot_speedup(platforms, regions, stats, output, legend_labels, figsize,
 def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
                              figsize, title, min_config, xscale_factor,
                              cpu_arrows):
-    if len(platforms) != 2:
-        raise ValueError('--with-speedup requires exactly two platform directories')
+    if len(platforms) < 2:
+        raise ValueError('--with-speedup requires a baseline and at least one comparison directory')
     if len(regions) != 1:
         raise ValueError('--with-speedup currently requires exactly one timing region')
 
@@ -332,22 +332,33 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
     ax_time.set_title(title, color=ctxt)
 
     region = regions[0]
-    cpu, gpu = platforms
+    cpu, *gpus = platforms
     cpu_label = legend_labels.get(cpu, os.path.basename(os.path.normpath(cpu)))
-    gpu_label = legend_labels.get(gpu, os.path.basename(os.path.normpath(gpu)))
 
     cpu_x, cpu_t = timing_series(stats, cpu, region)
-    gpu_x, gpu_t = timing_series(stats, gpu, region)
     cpu_x, cpu_t = filter_min_config(cpu_x, cpu_t, min_config)
-    gpu_x, gpu_t = filter_min_config(gpu_x, gpu_t, min_config)
-    common = sorted(set(cpu_x).intersection(gpu_x))
     cpu_map = dict(zip(cpu_x, cpu_t))
-    gpu_map = dict(zip(gpu_x, gpu_t))
-    speedup = np.array([cpu_map[x] / gpu_map[x] for x in common])
 
     colors = plt.cm.tab10.colors
     ax_time.plot(cpu_x, cpu_t, '-o', label=cpu_label, color=colors[0])
-    ax_time.plot(gpu_x, gpu_t, '-o', label=gpu_label, color=colors[1])
+    speedup_ticks = set()
+    max_speedup = 0.
+    for index, gpu in enumerate(gpus, start=1):
+        gpu_label = legend_labels.get(gpu, os.path.basename(os.path.normpath(gpu)))
+        gpu_x, gpu_t = timing_series(stats, gpu, region)
+        gpu_x, gpu_t = filter_min_config(gpu_x, gpu_t, min_config)
+        common = sorted(set(cpu_x).intersection(gpu_x))
+        if not common:
+            raise ValueError(f'no common configurations between {cpu} and {gpu}')
+        gpu_map = dict(zip(gpu_x, gpu_t))
+        speedup = np.array([cpu_map[x] / gpu_map[x] for x in common])
+        color = colors[index % len(colors)]
+        ax_time.plot(gpu_x, gpu_t, '-o', label=gpu_label, color=color)
+        # Match comparison colors between panels; retain the old one-GPU style.
+        ax_speedup.plot(common, speedup, '-o',
+                        color=color if len(gpus) > 1 else colors[2])
+        speedup_ticks.update(common)
+        max_speedup = max(max_speedup, float(np.max(speedup)))
     ax_time.set_xscale('log')
     ax_time.set_yscale('log')
     set_log2_timing_ticks(ax_time)
@@ -361,8 +372,8 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
     for ax in (ax_time, ax_speedup):
         ax.axvline(REFERENCE_CONFIG, linestyle=':', color='0.35', linewidth=1.0)
 
-    ax_speedup.plot(common, speedup, '-o', color=colors[2])
-    ax_speedup.set_ylim(0.25, 3.25)
+    speedup_limit = max(3.5, max_speedup * 1.05)
+    ax_speedup.set_ylim(0.25, speedup_limit)
     ax_speedup.axhline(1.0, linestyle='--', color='0.25', linewidth=1.0)
     ax_speedup.set_xscale('log')
     ax_speedup.set_ylabel('GPU speedup', color=ctxt)
@@ -371,16 +382,19 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
     else:
         xlabel = r'Horizontal domain scale (1x = $32 \times 32$ cells)'
     ax_speedup.set_xlabel(xlabel, color=ctxt)
-    ax_speedup.yaxis.set_major_locator(mticker.FixedLocator([1, 2, 3]))
+    ax_speedup.yaxis.set_major_locator(
+        mticker.FixedLocator(range(1, int(np.floor(speedup_limit)) + 1))
+    )
     ax_speedup.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda v, pos: f'{v:g}x' if v > 0 else '0')
     )
     ax_speedup.grid(True, linestyle=':', linewidth=0.5, alpha=1.0)
     ax_speedup.tick_params(colors=ctxt)
 
-    ax_speedup.xaxis.set_major_locator(mticker.FixedLocator(common))
+    common_ticks = sorted(speedup_ticks)
+    ax_speedup.xaxis.set_major_locator(mticker.FixedLocator(common_ticks))
     ax_speedup.xaxis.set_minor_locator(mticker.NullLocator())
-    ax_speedup.set_xticklabels(config_tick_labels(common, xscale_factor), rotation=45)
+    ax_speedup.set_xticklabels(config_tick_labels(common_ticks, xscale_factor), rotation=45)
 
     plt.savefig(output)
 
@@ -544,7 +558,7 @@ def main():
     )
     p.add_argument(
         '--with-speedup', action='store_true',
-        help='plot timing and first-platform/second-platform speedup panels'
+        help='plot timings and speedup of each subsequent platform relative to the first'
     )
     args = p.parse_args()
 

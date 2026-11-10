@@ -8,17 +8,18 @@ FLAGS = -s -f rst -t revealjs --slide-level=2 \
         -V revealjs-url=./reveal.js -V theme=$(THEME) \
         -V slideNumber=true -V width=1280 -V height=720 \
         -V transition=slide --template=gfdl.revealjs \
-        --syntax-highlighting=none
+        --no-highlight
 
 CPU_RUN = runs/c6_96pe_avx512
 GPU_RUN = runs/arm_20260809
+NEW_GPU_RUN = runs/gh200_p1_20261109
 H100_RUNS = runs/h100_p1_20260725 runs/h100_p2_20260725 \
             runs/h100_p4_20260725 runs/h100_p8_20260725 runs/h100_p10_20260725
-SINGLE_DEVICE_DATA = $(wildcard $(CPU_RUN)/*.out $(GPU_RUN)/*.out)
+SINGLE_DEVICE_DATA = $(wildcard $(CPU_RUN)/*.out $(GPU_RUN)/*.out $(NEW_GPU_RUN)/*.out)
 H100_DATA = $(foreach run,$(H100_RUNS),$(wildcard $(run)/*.out))
 SOLVER_FIGURES = img/kernel_layer.svg img/kernel_column.svg img/kernel_slice.svg
-FIGURES = $(SOLVER_FIGURES) img/block_shapes.svg img/block_loop_title.svg img/fms_mpi.svg \
-          img/dycore_and_main.svg img/module_scaling.svg \
+FIGURES = $(SOLVER_FIGURES) img/ocean_layers.svg img/block_shapes.svg img/block_loop_title.svg img/fms_mpi.svg \
+          img/dycore_and_main.svg img/dycore_and_main_comparison.svg img/module_scaling.svg \
           img/dycore_speedup.svg img/h100_module_timings.svg
 STATIC_ASSETS = img/bg_gfdl.jpg img/gyre.png img/corad_blocks.svg
 
@@ -55,18 +56,27 @@ img/block_loop_title.svg: scripts/gen_block_loop_title.py Makefile | img
 $(SOLVER_FIGURES) &: scripts/gen_kernel_types.py requirements.txt Makefile | img
 	$(PYTHON) $< --output-dir img
 
+img/ocean_layers.svg: scripts/gen_ocean_layers.py requirements.txt Makefile | img
+	$(PYTHON) $< -o $@
+
 img/fms_mpi.svg: d2/fms_mpi.d2 Makefile | img
 	$(D2) $< $@ --pad 2
 
 img/dycore_and_main.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
-	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) -o $@ \
-	  -l "AMD EPYC 9654,GH200" --figsize 3.5,3.0 --dark \
+	$(PYTHON) $< $(CPU_RUN) $(NEW_GPU_RUN) -o $@ \
+	  -l "AMD EPYC 9654,GH200 (Nov 9)" --figsize 3.5,3.0 --dark \
+	  --regions "Main loop" --with-speedup --min-config 4 --xscale-factor 4 \
+	  --title "Time per step (ms) for the MOM6 timestep"
+
+img/dycore_and_main_comparison.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
+	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) $(NEW_GPU_RUN) -o $@ \
+	  -l "AMD EPYC 9654,GH200 (Aug 9),GH200 (Nov 9)" --figsize 3.5,3.0 --dark \
 	  --regions "Main loop" --with-speedup --min-config 4 --xscale-factor 4 \
 	  --title "Time per step (ms) for the MOM6 timestep"
 
 img/module_scaling.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
-	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) -o $@ \
-	  -l "AMD EPYC 9654,GH200" --figsize 7.2,3.8 --dark \
+	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) $(NEW_GPU_RUN) -o $@ \
+	  -l "AMD EPYC 9654,GH200 (Aug 9),GH200 (Nov 9)" --figsize 7.2,3.8 --dark \
 	  --min-config 4 --xscale-factor 4 \
 	  --title "Time per step (ms) from 64×64 to 1024×1024"
 
