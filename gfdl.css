@@ -444,3 +444,15 @@ body {
 .reveal table { font-size: 0.83em; }
 .reveal section img { object-fit: contain; }
 .reveal .slides section .notes { display: none; }
+
+/* Solver overview: GTC poster schematics, sized for a single talk slide. */
+.reveal .solver-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 32px 0;
+}
+.reveal .solver-card { font-size: 0.68em; }
+.reveal .solver-card > p:first-child { font-size: 1.15em; }
+.reveal .solver-card img { width: 100%; max-width: 100%; }
+.reveal .solver-card p { margin: 14px 0; }

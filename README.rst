@@ -37,7 +37,7 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates just the seven generated SVGs. ``make clean``
+``make figures`` regenerates the ten generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
@@ -84,6 +84,8 @@ Figure generation
      - ``asy/block_shapes.asy``
    * - Animated block traversal
      - ``scripts/gen_block_loop_title.py``
+   * - Layer, column, and slice solver diagrams
+     - ``scripts/gen_kernel_types.py``, adapted from the GTC poster
    * - FMS/MPI communication diagram
      - ``d2/fms_mpi.d2`` (copied from the NRL presentation)
 
@@ -104,6 +106,14 @@ module-level speedup view is deferred.
 
 The older blocking comparison remains static until its generator and original
 data are recovered. Background and gyre image also remain static.
+
+The ``Solvers of MOM6`` overview reuses the schematic geometry and teal/orange
+colors from ``~/presentations/gtc2026/scripts/kernel_types.py``. Its local
+adaptation exports SVGs rather than poster PDFs/PNGs, with sans-serif labels
+and a transparent outer background. These illustrate dependency patterns,
+not literal ocean data or GPU thread layouts. The slice is one useful pattern
+within mixed solvers, not a complete depiction of all their phases. No GTC
+performance datasets or results are imported into this talk.
 
 Sources and scope
 -----------------

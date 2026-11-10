@@ -46,25 +46,46 @@ Port the model, not just an isolated kernel.
    practices rather than introducing a new language or framework.
 
 
-Different solvers, different dependencies
-=========================================
+Solvers of MOM6
+===============
 
-.. list-table::
-   :header-rows: 1
-   :widths: 22 40 38
+.. container:: solver-grid
 
-   * - Structure
-     - Examples
-     - Mapping constraint
-   * - **Layered**
-     - Advection, horizontal viscosity
-     - Horizontal work over layers
-   * - **Columnar**
-     - Vertical friction
-     - Independent columns; ordered vertical work
-   * - **Mixed**
-     - Pressure, continuity, barotropic
-     - Stencils, sums, and coupling
+   .. container:: solver-card
+
+      **Layered dynamics**
+
+      .. image:: img/kernel_layer.svg
+         :alt: An ocean grid with a horizontal layer highlighted in teal.
+
+      Advection, horizontal viscosity
+
+      Independent horizontal work;
+      layers may also be concurrent.
+
+   .. container:: solver-card
+
+      **Columnar physics**
+
+      .. image:: img/kernel_column.svg
+         :alt: An ocean grid with an independent full-depth column highlighted in orange.
+
+      Vertical friction
+
+      Independent columns;
+      ordered work in depth.
+
+   .. container:: solver-card
+
+      **Mixed / sliced domains**
+
+      .. image:: img/kernel_slice.svg
+         :alt: An ocean grid with an i-k slice highlighted in teal and ordered vertical traversal.
+
+      Pressure, continuity, barotropic
+
+      Horizontal work coupled
+      to vertical accumulation.
 
 No universal loop shape fits the dynamic core.
 
@@ -76,8 +97,13 @@ No universal loop shape fits the dynamic core.
    layers. A column solve has horizontal independence but ordered work down
    each column. Mixed solvers combine these patterns: pressure depends on
    overlying layers, and the barotropic mode couples a two-dimensional solve
-   to vertically integrated state. This taxonomy tells us how to expose work;
-   later we will see why it does not predict speedup by itself.
+   to vertically integrated state. The slice illustrates a useful mixed-work
+   loop pattern, not every phase of every mixed solver. The diagrams come from
+   the GTC poster: orange highlights an independent column; teal highlights
+   a layer or an i-k slice. Arrows indicate traversal/depth, not prescribed
+   GPU thread geometry. Layer work can also be concurrent in k when there is
+   no vertical dependence. This taxonomy tells us how to expose work; later
+   we will see why it does not predict speedup by itself.
 
 
 Fortran describes independent work

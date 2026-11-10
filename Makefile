@@ -7,7 +7,8 @@ export MPLBACKEND = Agg
 FLAGS = -s -f rst -t revealjs --slide-level=2 \
         -V revealjs-url=./reveal.js -V theme=$(THEME) \
         -V slideNumber=true -V width=1280 -V height=720 \
-        -V transition=slide --template=gfdl.revealjs --no-highlight
+        -V transition=slide --template=gfdl.revealjs \
+        --syntax-highlighting=none
 
 CPU_RUN = runs/c6_96pe_avx512
 GPU_RUN = runs/arm_20260809
@@ -15,7 +16,8 @@ H100_RUNS = runs/h100_p1_20260725 runs/h100_p2_20260725 \
             runs/h100_p4_20260725 runs/h100_p8_20260725 runs/h100_p10_20260725
 SINGLE_DEVICE_DATA = $(wildcard $(CPU_RUN)/*.out $(GPU_RUN)/*.out)
 H100_DATA = $(foreach run,$(H100_RUNS),$(wildcard $(run)/*.out))
-FIGURES = img/block_shapes.svg img/block_loop_title.svg img/fms_mpi.svg \
+SOLVER_FIGURES = img/kernel_layer.svg img/kernel_column.svg img/kernel_slice.svg
+FIGURES = $(SOLVER_FIGURES) img/block_shapes.svg img/block_loop_title.svg img/fms_mpi.svg \
           img/dycore_and_main.svg img/module_scaling.svg \
           img/dycore_speedup.svg img/h100_module_timings.svg
 STATIC_ASSETS = img/bg_gfdl.jpg img/gyre.png img/corad_blocks.svg
@@ -49,6 +51,9 @@ img/block_shapes.svg: asy/block_shapes.asy Makefile | img
 
 img/block_loop_title.svg: scripts/gen_block_loop_title.py Makefile | img
 	$(PYTHON) $< -o $@ --n 32 --block 8,4 --frame-ms 48
+
+$(SOLVER_FIGURES) &: scripts/gen_kernel_types.py requirements.txt Makefile | img
+	$(PYTHON) $< --output-dir img
 
 img/fms_mpi.svg: d2/fms_mpi.d2 Makefile | img
 	$(D2) $< $@ --pad 2
