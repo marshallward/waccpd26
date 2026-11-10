@@ -1,7 +1,7 @@
 WACCPD 2026 presentation draft
 =============================
 
-15-minute slot: **16 main slides (including title), 14:30 of planned speech,
+15-minute slot: **17 main slides (including title), 14:30 of planned speech,
 0:30 margin**, plus an optional August/November timing comparison beneath
 the main timing slide and six vertical backup slides under the conclusion.
 Speaker notes and elapsed-time cues are in ``slides.txt`` (reStructuredText).
@@ -29,6 +29,16 @@ where available. The Makefile downloads Reveal.js into ``reveal.js/`` if
 ``REVEAL_VERSION``. Local builds and deployment use the same rule.
 Reveal.js is not tracked in Git; an existing installation is reused.
 Viewing the built presentation needs no CDN.
+
+The ocean-flow video is cached in ``media/mom6_relvort.mp4`` and ignored by
+Git. On a fresh build, the Makefile downloads the approximately 49 MiB file
+from https://marshallward.org/sewg2026/media/mom6_relvort.mp4; local previews
+can instead reuse the identical file from the SEWG presentation. Override
+``MOM6_VIDEO_URL`` if its hosting location changes. Deployment includes the
+cached file, so playback is local to the deployed talk rather than streamed
+from the older presentation. Cached media is preserved by ``make clean``.
+The video is muted and loops on its slide; controls allow manual playback
+if autoplay is blocked. Budget about thirty seconds, not the full movie.
 
 For a fresh local checkout, install the system dependencies above, then:
 
@@ -122,6 +132,12 @@ The ocean sketch above the diagrams comes from the poster's
 ``scripts/ocean_layers.py``. It schematically depicts moving ALE layers,
 not simulation output; the branching layout relates the ocean domain to
 computational views rather than indicating a sequence of solver execution.
+The local SVG gently animates the interfaces on a ten-second loop while
+keeping the highlighted column and seabed stationary. The generator checks
+that interfaces never cross. Click the picture (or focus it and press Enter)
+to pause/resume; reduced-motion preferences pause it automatically. Use
+``python3 scripts/gen_ocean_layers.py --static -o /tmp/opencode/ocean_layers.svg``
+for a still export. No animation library or video file is required.
 
 Sources and scope
 -----------------

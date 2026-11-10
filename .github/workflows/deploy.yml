@@ -59,7 +59,7 @@ jobs:
           destination="public/${PRESENTATION}"
           mkdir -p "${destination}/reveal.js/css/theme"
           cp index.html "${destination}/"
-          cp -a img "${destination}/"
+          cp -a img media "${destination}/"
           cp -a reveal.js/dist reveal.js/plugin "${destination}/reveal.js/"
           cp reveal.js/LICENSE "${destination}/reveal.js/"
           cp reveal.js/css/theme/gfdl.css "${destination}/reveal.js/css/theme/"

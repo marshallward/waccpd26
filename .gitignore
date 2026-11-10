@@ -3,6 +3,7 @@
 /public/
 /reveal.js/
 /master.zip
+/media/
 
 # Generated figures; retain assets without local generators/data.
 /img/*

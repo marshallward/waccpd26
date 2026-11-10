@@ -28,7 +28,11 @@ Single-device comparison
 ``gen_plot.py`` generates the main-loop and six-module figures. Configuration
 numbers encode horizontal area relative to 32 × 32. The Makefile excludes
 configurations below 4 and divides the displayed scale by 4, so the plotted
-reference is 64 × 64 and the largest displayed area factor is 256.
+reference is 64 × 64 and the largest displayed area factor is 256 in the
+module panels. The primary main-loop figure and August/November comparison
+instead use ``--domain-sizes``: ticks label 64², 128², 256², 512², and 1024²,
+with intermediate area-doubling ticks left unlabeled. This changes labels,
+not the plotted x coordinates or data selection.
 Vertical resolution is 100 levels in the original experiment. The main-loop
 comparison includes a separate speedup curve for each GPU run series, while
 the primary figure shows only November. Both speedup panels extend to at least 3.5×;

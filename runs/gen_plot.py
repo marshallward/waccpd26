@@ -226,9 +226,17 @@ def filter_min_config(nx, values, min_config):
     return list(nx_array[keep]), values[keep]
 
 
-def config_tick_labels(nx, xscale_factor):
+def config_tick_labels(nx, xscale_factor, domain_sizes=False):
     labels = []
     for x in nx:
+        if domain_sizes:
+            # Configuration numbers encode area relative to a 32×32 grid.
+            # Label square power-of-two domains; retain intermediate tick marks.
+            side = 32 * np.sqrt(x)
+            exponent = np.log2(side)
+            labels.append(rf'${int(round(side))}^2$'
+                          if np.isclose(exponent, round(exponent)) else '')
+            continue
         scaled = x / xscale_factor
         label = f'{scaled:g}' if scaled % 1 else f'{int(scaled)}'
         labels.append(f'{label}x')
@@ -261,7 +269,7 @@ def set_log2_timing_ticks(ax):
 
 
 def plot_speedup(platforms, regions, stats, output, legend_labels, figsize,
-                 title, min_config, xscale_factor):
+                 title, min_config, xscale_factor, domain_sizes=False):
     if len(platforms) != 2:
         raise ValueError('--speedup requires exactly two platform directories')
 
@@ -297,7 +305,8 @@ def plot_speedup(platforms, regions, stats, output, legend_labels, figsize,
         ax.set_xscale('log')
         ax.xaxis.set_major_locator(mticker.FixedLocator(common))
         ax.xaxis.set_minor_locator(mticker.NullLocator())
-        ax.set_xticklabels(config_tick_labels(common, xscale_factor), rotation=45)
+        ax.set_xticklabels(config_tick_labels(common, xscale_factor, domain_sizes),
+                           rotation=0 if domain_sizes else 45)
         ax.axhline(1.0, linestyle=':', color='0.5', linewidth=0.8)
         ax.grid(True, linestyle=':', linewidth=0.5, alpha=1.0)
         ax.tick_params(colors=ctxt)
@@ -311,7 +320,7 @@ def plot_speedup(platforms, regions, stats, output, legend_labels, figsize,
 
 def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
                              figsize, title, min_config, xscale_factor,
-                             cpu_arrows):
+                             cpu_arrows, domain_sizes=False):
     if len(platforms) < 2:
         raise ValueError('--with-speedup requires a baseline and at least one comparison directory')
     if len(regions) != 1:
@@ -377,7 +386,9 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
     ax_speedup.axhline(1.0, linestyle='--', color='0.25', linewidth=1.0)
     ax_speedup.set_xscale('log')
     ax_speedup.set_ylabel('GPU speedup', color=ctxt)
-    if xscale_factor == 4:
+    if domain_sizes:
+        xlabel = 'Horizontal domain size (cells)'
+    elif xscale_factor == 4:
         xlabel = r'Horizontal domain scale (1x = $64 \times 64$ cells)'
     else:
         xlabel = r'Horizontal domain scale (1x = $32 \times 32$ cells)'
@@ -394,14 +405,17 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
     common_ticks = sorted(speedup_ticks)
     ax_speedup.xaxis.set_major_locator(mticker.FixedLocator(common_ticks))
     ax_speedup.xaxis.set_minor_locator(mticker.NullLocator())
-    ax_speedup.set_xticklabels(config_tick_labels(common_ticks, xscale_factor), rotation=45)
+    ax_speedup.set_xticklabels(
+        config_tick_labels(common_ticks, xscale_factor, domain_sizes),
+        rotation=0 if domain_sizes else 45,
+    )
 
     plt.savefig(output)
 
 
 def plot_results(platforms, regions, stats, output, legend_labels, yrange,
                  shared_yrange, figsize, cpu_arrows, title, min_config,
-                 xscale_factor):
+                 xscale_factor, domain_sizes=False):
     nplot = len(regions)
     nrow, ncol = square_pad(nplot)
     yvalues = []
@@ -452,7 +466,8 @@ def plot_results(platforms, regions, stats, output, legend_labels, yrange,
                 ax.set_xscale('log')
                 ax.xaxis.set_major_locator(mticker.FixedLocator(nx))
                 ax.xaxis.set_minor_locator(mticker.NullLocator())
-                ax.set_xticklabels(config_tick_labels(nx, xscale_factor), rotation=45)
+                ax.set_xticklabels(config_tick_labels(nx, xscale_factor, domain_sizes),
+                                   rotation=0 if domain_sizes else 45)
 
                 ax.set_yscale('log')
                 set_log2_timing_ticks(ax)
@@ -545,6 +560,10 @@ def main():
         help='divide displayed horizontal domain scale labels by N'
     )
     p.add_argument(
+        '--domain-sizes', action='store_true',
+        help='label square power-of-two domain sizes instead of area scale factors'
+    )
+    p.add_argument(
         '--regions', default='', metavar='REGION[,REGION...]',
         help='comma-separated timing regions to plot'
     )
@@ -593,14 +612,16 @@ def main():
         plot_timing_with_speedup(platforms, plot_regions, stats, args.output,
                                  legend_labels, figsize, args.title,
                                  args.min_config, args.xscale_factor,
-                                 args.cpu_arrows)
+                                 args.cpu_arrows, args.domain_sizes)
     elif args.speedup:
         plot_speedup(platforms, plot_regions, stats, args.output, legend_labels,
-                     figsize, args.title, args.min_config, args.xscale_factor)
+                     figsize, args.title, args.min_config, args.xscale_factor,
+                     args.domain_sizes)
     else:
         plot_results(platforms, plot_regions, stats, args.output, legend_labels,
                       yrange, args.shared_yrange, figsize, args.cpu_arrows,
-                      args.title, args.min_config, args.xscale_factor)
+                      args.title, args.min_config, args.xscale_factor,
+                      args.domain_sizes)
 
 
 if __name__ == '__main__':

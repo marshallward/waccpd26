@@ -468,6 +468,12 @@ body {
   background: #edf5f6;
   border-radius: 8px;
 }
+.reveal .solver-ocean object {
+  width: 256px;
+  height: 150px;
+  background: #edf5f6;
+  border-radius: 8px;
+}
 .reveal .solver-branches {
   display: block;
   width: 100%;

@@ -37,7 +37,7 @@ Port the model, not just an isolated kernel.
 
 .. container:: notes
 
-   [0:30–1:30] MOM6 supports ongoing scientific research and operational
+   [0:30–1:15] MOM6 supports ongoing scientific research and operational
    applications. A replacement GPU implementation would create a second code
    to maintain and validate. Changing answers is also disruptive: we need to
    distinguish scientific changes from porting errors. CPU execution remains
@@ -46,13 +46,45 @@ Port the model, not just an isolated kernel.
    practices rather than introducing a new language or framework.
 
 
+An ocean of different flows
+========================================
+
+.. raw:: html
+
+   <video data-autoplay loop muted playsinline controls preload="metadata"
+     style="width: 100%; height: 490px; object-fit: contain;"
+     aria-label="MOM6 ocean relative-vorticity visualization">
+     <source src="media/mom6_relvort.mp4" type="video/mp4">
+     <a href="media/mom6_relvort.mp4">Open the MOM6 ocean animation</a>.
+   </video>
+
+Different flows — different computational demands.
+
+.. container:: notes
+
+   [1:15–1:45] Use about thirty seconds of this relative-vorticity movie,
+   reused from the SEWG talk, rather than waiting for its full duration.
+   Start with the ocean rather than the loops: MOM6 represents a range of
+   circulation structures, and its solvers must support that diversity.
+   Transition to the next slide: horizontal processes, vertical column work,
+   and their coupling expose different dependencies. This is context for the
+   model, not a claim that the movie's configuration has been GPU-ported or
+   is the double-gyre timing experiment. Source context: Adcroft et al. (2019),
+   https://doi.org/10.1029/2019MS001726. The video loops while this slide is
+   visible; use the controls if browser autoplay is blocked.
+
+
 Solvers of MOM6
 ===============
 
 .. container:: solver-ocean
 
-   .. image:: img/ocean_layers.svg
-      :alt: Schematic moving ocean layers with a horizontal layer and a full-depth column highlighted.
+   .. raw:: html
+
+      <object type="image/svg+xml" data="img/ocean_layers.svg"
+        aria-label="Animated ocean layers around a stationary highlighted column; click to pause">
+        <img src="img/ocean_layers.svg" alt="Ocean layers and a highlighted column">
+      </object>
 
 .. raw:: html
 
@@ -89,7 +121,7 @@ Solvers of MOM6
 
 .. container:: notes
 
-   [1:30–2:30] The dynamic core advances velocities and layer thicknesses.
+   [1:45–2:30] The dynamic core advances velocities and layer thicknesses.
    Start with the ocean-layer sketch: these moving layers use ALE, or
    Arbitrary Lagrangian–Eulerian coordinates. It is a schematic, not model
    output. The branches connect the physical domain to three useful

@@ -3,6 +3,8 @@ PYTHON = python3
 ASY = asy
 D2 = d2
 REVEAL_VERSION = 5.2.1
+MOM6_VIDEO_URL = https://marshallward.org/sewg2026/media/mom6_relvort.mp4
+MEDIA = media/mom6_relvort.mp4
 export MPLBACKEND = Agg
 FLAGS = -s -f rst -t revealjs --slide-level=2 \
         -V revealjs-url=./reveal.js -V theme=$(THEME) \
@@ -28,7 +30,7 @@ all: index.html
 
 figures: $(FIGURES)
 
-index.html: slides.txt Makefile gfdl.revealjs reveal.js/css/theme/gfdl.css $(FIGURES) $(STATIC_ASSETS)
+index.html: slides.txt Makefile gfdl.revealjs reveal.js/css/theme/gfdl.css $(FIGURES) $(STATIC_ASSETS) $(MEDIA)
 	pandoc $(FLAGS) $< -o $@
 
 reveal.js/dist/reveal.js:
@@ -47,6 +49,17 @@ reveal.js/css/theme/gfdl.css: gfdl.css | reveal.js/dist/reveal.js
 	mkdir -p $(@D)
 	cp $< $@
 
+media/mom6_relvort.mp4: | media
+	@set -eu; \
+	tmp=$$(mktemp media/.mom6-video.XXXXXX); \
+	trap 'rm -f "$$tmp"' EXIT HUP INT TERM; \
+	curl --fail --silent --show-error --location --retry 3 \
+	  "$(MOM6_VIDEO_URL)" -o "$$tmp"; \
+	mv "$$tmp" $@
+
+media:
+	mkdir -p $@
+
 img/block_shapes.svg: asy/block_shapes.asy Makefile | img
 	$(ASY) -f svg $< -o $(basename $@)
 
@@ -64,14 +77,14 @@ img/fms_mpi.svg: d2/fms_mpi.d2 Makefile | img
 
 img/dycore_and_main.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
 	$(PYTHON) $< $(CPU_RUN) $(NEW_GPU_RUN) -o $@ \
-	  -l "AMD EPYC 9654,GH200 (Nov 9)" --figsize 3.5,3.0 --dark \
-	  --regions "Main loop" --with-speedup --min-config 4 --xscale-factor 4 \
+	  -l "AMD EPYC 9654,GH200" --figsize 3.5,3.0 --dark \
+	  --regions "Main loop" --with-speedup --min-config 4 --domain-sizes \
 	  --title "Time per step (ms) for the MOM6 timestep"
 
 img/dycore_and_main_comparison.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
 	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) $(NEW_GPU_RUN) -o $@ \
 	  -l "AMD EPYC 9654,GH200 (Aug 9),GH200 (Nov 9)" --figsize 3.5,3.0 --dark \
-	  --regions "Main loop" --with-speedup --min-config 4 --xscale-factor 4 \
+	  --regions "Main loop" --with-speedup --min-config 4 --domain-sizes \
 	  --title "Time per step (ms) for the MOM6 timestep"
 
 img/module_scaling.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
