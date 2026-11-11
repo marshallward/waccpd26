@@ -37,30 +37,38 @@ What is MOM6?
       A community ocean model for regional and global simulations,
       forecasting, and climate research.
 
-      **Operational code, evolving science**
-
-      * Validated answers → **bit reproducibility**
-      * Ongoing CPU runs → **no CPU slowdown**
-      * Shared development → **one codebase**
+      Operational code, evolving science.
 
 Accelerate the model without disrupting the science.
 
 .. container:: notes
 
-   [0:30–1:15] MOM6 is the Modular Ocean Model, an open-source community ocean
+   [0:30–1:00] MOM6 is the Modular Ocean Model, an open-source community ocean
    model used for regional and global simulations, forecasting, and climate
    research. The image, reused from the GTC poster, shows Gulf Stream and
    eddy structure in a 5 km Northwest Atlantic configuration. It illustrates
    the scientific application, not the GPU timing benchmark or a claim that
    this particular configuration is operationally deployed or GPU-validated.
    The model supports both ongoing research and operational applications:
-   it is not a disposable benchmark kernel. A replacement GPU implementation
-   would create a second code to maintain and validate. Changing answers is
-   also disruptive: we need to
-   distinguish scientific changes from porting errors. CPU execution remains
-   important, so a successful port must preserve that path and its performance.
-   The approach is deliberately incremental, retaining the model's development
-   practices rather than introducing a new language or framework.
+   it is not a disposable benchmark kernel.
+
+
+Operational requirements
+========================
+
+* Validated answers → **bit reproducibility**
+* Ongoing CPU runs → **no CPU slowdown**
+* Shared development → **one codebase**
+
+This is what the GPU port needs to preserve.
+
+.. container:: notes
+
+   [1:00–1:15] Provisional framing slide: try the requirements here before
+   introducing the loop patterns; move later if this interrupts the ocean
+   introduction. Just state what we need here: preserve validated answers,
+   CPU performance, and shared development. Save the validation results and
+   reproducibility techniques for the end, after the performance results.
 
 
 An ocean of different flows
@@ -301,35 +309,6 @@ Concurrent slices, ordered integration
    The sketch shows computational dependencies, not CUDA launch geometry.
 
 
-Keep the data on the device
-===========================
-
-.. code:: fortran
-
-   ! Establish residency
-   !$omp target enter data map(alloc: a) map(to: b, c)
-
-   do concurrent (k=1:nk, j=1:nj, i=1:ni)
-     a(i,j,k) = b(i,j,k) + c(i,j,k)
-   enddo
-
-   ! Return the result when needed
-   !$omp target exit data map(from: a) map(delete: b, c)
-
-In MOM6, persistent fields stay resident **across kernels**.
-
-.. container:: notes
-
-   [4:30–5:30] This is a compact illustration of the data lifecycle, not a
-   prescription to copy fields around every kernel. Real model timesteps
-   contain thousands of kernels, so those transfers would be devastating.
-   Persistent fields are mapped during initialization and retained on the GPU.
-   Modules manage their own temporary storage. OpenMP-managed arrays must be
-   visible to kernels generated from do concurrent: interoperability is an
-   explicit toolchain requirement. Derived types require care as well: mapping
-   the object and its array components is one coordinated lifetime problem.
-
-
 Blocking reconciles CPU and GPU
 ===============================
 
@@ -343,7 +322,7 @@ Runtime block extents — same solver, same module API.
 
 .. container:: notes
 
-   [5:30–6:30] Nested loops alone do not solve every mapping problem. Larger
+   [4:30–5:30] Nested loops alone do not solve every mapping problem. Larger
    solvers contain multiple phases and helper calls that can obscure the
    useful parallel structure. Explicit computational blocks keep ordinary
    control flow outside compact kernels and bound temporary storage. The same
@@ -391,7 +370,7 @@ Outer loops select a tile; ``do concurrent`` expresses its independent work.
 
 .. container:: notes
 
-   [6:30–7:00] The animation makes the two levels concrete. Ordinary outer
+   [5:30–6:00] The animation makes the two levels concrete. Ordinary outer
    loops choose an 8 by 4 tile in this illustrative 26 by 26 domain. The
    right edge has 2 by 4 tail tiles, the bottom has 8 by 2 tiles, and the
    final corner is 2 by 2: min clips the bounds rather than padding the grid.
@@ -419,7 +398,7 @@ CPU curves nearly overlap; GPU time drops with blocking.
 
 .. container:: notes
 
-   [7:00–7:45] This earlier development comparison isolates the effect of
+   [6:00–6:45] This earlier development comparison isolates the effect of
    blocking in Coriolis and momentum advection. The blue and orange CPU
    curves nearly overlap. The green GPU curve without blocking is much higher
    than the red blocked curve. That is the practical motivation: expose
@@ -433,41 +412,38 @@ CPU curves nearly overlap; GPU time drops with blocking.
    the following paper results establish the current measured performance.
 
 
-Preserve answers and CPU performance
-====================================
+Keep the data on the device
+===========================
 
-**Bitwise validation:** NVIDIA CPU and GPU builds match in three tested
-configurations.
+We have described the work. **Where does its data live?**
 
-* Preserve vertical ordering and reproducible reductions
-* Restrict floating-point transformations where required
+.. code:: fortran
 
-.. list-table:: CPU regression check: 384 × 256 × 100
-   :header-rows: 1
-   :widths: 60 40
+   ! Establish residency
+   !$omp target enter data map(alloc: a) map(to: b, c)
 
-   * - Codebase
-     - Mean time/step
-   * - Production baseline
-     - 76.51 ms
-   * - GPU-enabled, on CPU
-     - 74.89 ms
+   do concurrent (k=1:nk, j=1:nj, i=1:ni)
+     a(i,j,k) = b(i,j,k) + c(i,j,k)
+   enddo
 
-Ten runs each: no regression in this test; mean time **2.1% lower**.
+   ! Return the result when needed
+   !$omp target exit data map(from: a) map(delete: b, c)
+
+In MOM6, persistent fields stay resident **across kernels**.
 
 .. container:: notes
 
-   [7:45–8:45] Bitwise matching is scoped to the tested configurations,
-   toolchain, hardware, flags, and run lengths. It is not a claim of universal
-   agreement across vendors or optimization settings. The double gyre validates
-   the measured dynamic core; two production-style configurations broaden
-   coverage but are still partial ports. GPU builds use NVIDIA HPC SDK 26.3,
-   with selected transformations disabled, including FMA contraction. The
-   separate CPU regression experiment compares the two codebases on identical
-   hardware, compiler, flags, and resource layout. Ten repetitions each show
-   no regression at this representative size. Standard deviations were 0.075
-   and 0.064 ms respectively. Do not generalize this one-case result to every
-   configuration or confuse it with the cross-hardware performance comparison.
+   [6:45–7:45] So far we have deliberately left out data movement. Exposing
+   independent work and choosing useful blocks is not enough if every kernel
+   copies its fields back and forth. This is a compact illustration of the
+   data lifecycle, not a prescription to copy fields around every kernel.
+   Real model timesteps contain thousands of kernels, so those transfers
+   would be devastating. Persistent fields are mapped during initialization
+   and retained on the GPU. Modules manage their own temporary storage.
+   OpenMP-managed arrays must be visible to kernels generated from
+   do concurrent: interoperability is an explicit toolchain requirement.
+   Derived types require care as well: mapping the object and its array
+   components is one coordinated lifetime problem.
 
 
 Benchmark: the double gyre
@@ -489,7 +465,7 @@ Fixed resources, increasing problem size — **not weak scaling**.
 
 .. container:: notes
 
-   [8:45–9:30] The double gyre is an idealized wind-driven basin whose cost
+   [7:45–8:30] The double gyre is an idealized wind-driven basin whose cost
    is dominated by the dynamic core. The comparison uses natural resource
    units, one CPU socket and one GPU, rather than an ambiguous node comparison.
    CPU performance uses Intel oneAPI 25.2 and reproducibility-oriented flags;
@@ -511,7 +487,7 @@ Small domains favor CPU; larger domains amortize GPU overhead.
 
 .. container:: notes
 
-   [9:30–10:45] The top panel shows time per step; the bottom shows CPU time
+   [8:30–9:45] The top panel shows time per step; the bottom shows CPU time
    divided by GPU time. The GPU curve uses the November 9 run series;
    the CPU reference is unchanged. The vertical subslide preserves the
    August/November comparison. The module plots follow the same primary versus
@@ -558,7 +534,7 @@ Same source, different module performance.
 
 .. container:: notes
 
-   [10:45–12:00] The primary panels compare EPYC with the November GPU run
+   [9:45–11:00] The primary panels compare EPYC with the November GPU run
    series. The vertical subslide preserves the August/November overlay.
    Do not walk through every panel: contrast horizontal viscosity, a seemingly
    favorable layered solver, with the mixed pressure and barotropic components.
@@ -605,7 +581,7 @@ Up to **6.1× on 10 H100s**, relative to one H100.
 
 .. container:: notes
 
-   [12:00–13:15] This reproduces the manuscript's fixed-domain strong-scaling
+   [11:00–12:15] This reproduces the manuscript's fixed-domain strong-scaling
    view using H100s rather than the GH200 of the single-device comparison.
    The horizontal axis is GPU count; each curve fixes the global domain.
    Speedup is relative to one H100 for that same domain. The dashed line
@@ -620,6 +596,51 @@ Up to **6.1× on 10 H100s**, relative to one H100.
    data-resident implementation, not ideal scaling or a hardware-independent
    communication limit. Rank/device selection uses an OpenACC runtime call in
    the NVIDIA implementation.
+
+
+Bitwise reproducibility on the GPU
+==================================
+
+**NVIDIA CPU and GPU builds matched bitwise in three tested configurations.**
+
+How we preserved the answers:
+
+* Retain operation order: vertical accumulation and reproducible reductions
+* Use reproducible math functions, including ``exp_repro``
+* Control floating-point transformations, including FMA contraction
+
+.. list-table:: CPU regression check: 384 × 256 × 100
+   :header-rows: 1
+   :widths: 60 40
+
+   * - Codebase
+     - Mean time/step
+   * - Production baseline
+     - 76.51 ms
+   * - GPU-enabled, on CPU
+     - 74.89 ms
+
+Ten runs each: no CPU regression in this test; mean time **2.1% lower**.
+
+.. container:: notes
+
+   [12:15–13:15] Return to the requirements from the opening: we achieved
+   bitwise CPU/GPU agreement in the three tested configurations. This required
+   preserving arithmetic order, including ordered k accumulations and
+   reproducible reductions, using reproducible math such as exp_repro rather
+   than relying on different CPU/GPU implementations of exp, and controlling
+   compiler transformations such as FMA contraction. This is why some earlier
+   examples kept k serial; independent k work can still be concurrent.
+   Bitwise matching is scoped to the tested configurations, toolchain,
+   hardware, flags, and run lengths, not universal agreement across vendors
+   or optimization settings. The double gyre validates the measured dynamic
+   core; two production-style configurations broaden coverage but are still
+   partial ports. GPU builds use NVIDIA HPC SDK 26.3. The separate CPU
+   regression experiment compares the two codebases on identical hardware,
+   compiler, flags, and resource layout. Ten repetitions each show no
+   regression at this representative size. Standard deviations were 0.075
+   and 0.064 ms respectively. Do not generalize this one-case result to every
+   configuration or confuse it with the cross-hardware performance comparison.
 
 
 Standards-based, not limitation-free

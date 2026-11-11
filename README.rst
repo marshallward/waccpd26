@@ -1,7 +1,7 @@
 WACCPD 2026 presentation draft
 =============================
 
-15-minute slot: **19 main slides (including title), 14:30 of planned speech,
+15-minute slot: **20 main slides (including title), 14:30 of planned speech,
 0:30 margin**, plus optional August/November comparisons beneath the main
 timing and module slides, and six vertical backup slides under the conclusion.
 Speaker notes and elapsed-time cues are in ``slides.txt`` (reStructuredText).
