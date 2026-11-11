@@ -1,7 +1,7 @@
 WACCPD 2026 presentation draft
 =============================
 
-15-minute slot: **18 main slides (including title), 14:30 of planned speech,
+15-minute slot: **19 main slides (including title), 14:30 of planned speech,
 0:30 margin**, plus optional August/November comparisons beneath the main
 timing and module slides, and six vertical backup slides under the conclusion.
 Speaker notes and elapsed-time cues are in ``slides.txt`` (reStructuredText).
@@ -49,7 +49,7 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates the thirteen generated SVGs. ``make clean``
+``make figures`` regenerates the sixteen generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
@@ -102,6 +102,8 @@ Figure generation
      - ``scripts/gen_block_loop_title.py``
    * - Layer, column, and slice solver diagrams
      - ``scripts/gen_kernel_types.py``, adapted from the GTC poster
+   * - Fully concurrent, column, and nested-slice loop diagrams
+     - ``scripts/gen_loop_patterns.py``
    * - Moving ocean-layer schematic
      - ``scripts/gen_ocean_layers.py``, adapted from the GTC poster
    * - FMS/MPI communication diagram

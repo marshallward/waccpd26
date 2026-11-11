@@ -95,8 +95,8 @@ Different flows — different computational demands.
 
 .. class:: auto-animate animate-group-solvers solver-intro
 
-Solvers of MOM6
-===============
+Layer-based Dynamics
+====================
 
 .. container:: solver-ocean
 
@@ -106,6 +106,8 @@ Solvers of MOM6
         aria-label="Animated ocean layers through a highlighted column with fixed horizontal bounds; click to pause">
         <img src="img/ocean_layers.svg" alt="Ocean layers and a highlighted column">
       </object>
+
+   Finite-volume solvers with dynamic vertical coordinates
 
 .. container:: notes
 
@@ -186,23 +188,32 @@ Solvers of MOM6
 Fortran describes independent work
 ==================================
 
-.. code:: fortran
+.. container:: loop-pattern
 
-   do concurrent (k=1:nk, j=1:nj, i=1:ni)
-     a(i,j,k) = b(i,j,k) + c(i,j,k)
-   enddo
+   .. container:: loop-pattern-figure
 
-**Source:** iteration independence
+      .. image:: img/loop_points.svg
+         :alt: A fully filled ocean grid, colored by layer; i, j, and k are all concurrent.
 
-**Compiler:** CPU execution or GPU kernel mapping
+   .. container:: loop-pattern-code
 
-**OpenMP:** device-data residency
+      **Independent grid points**
+
+      .. code:: fortran
+
+         do concurrent (k=1:nk, j=1:nj, i=1:ni)
+           a(i,j,k) = b(i,j,k) + c(i,j,k)
+         enddo
+
+      Every ``(i,j,k)`` iteration is independent.
+
+      Colors distinguish layers, not execution order.
 
 ``do concurrent`` does not itself require GPU execution.
 
 .. container:: notes
 
-   [2:30–3:30] The loop is standard Fortran, not a GPU-specific directive.
+   [2:30–3:10] The loop is standard Fortran, not a GPU-specific directive.
    It states that these iterations may execute in any order. The compiler and
    build configuration decide how to execute them. NVIDIA maps these loops
    through its OpenACC machinery; other vendors have their own implementations.
@@ -210,6 +221,84 @@ Fortran describes independent work
    launch details. But this is not a complete accelerator programming model:
    Fortran does not prescribe host-device transfers, and procedure calls and
    temporary storage still affect whether a useful kernel can be generated.
+
+
+Independent columns, ordered depth
+========================================
+
+.. container:: loop-pattern
+
+   .. container:: loop-pattern-figure
+
+      .. image:: img/loop_columns.svg
+         :alt: Colored vertical columns computed independently, with downward arrows showing ordered work in k within each column.
+
+   .. container:: loop-pattern-code
+
+      **One ordered solve per column**
+
+      .. code:: fortran
+
+         do concurrent (j=1:nj, i=1:ni)
+           do k=1,nk
+             ! Ordered column solve
+           enddo
+         enddo
+
+      Columns are independent; depth is not.
+
+      Each column keeps its own vertical ordering.
+
+.. container:: notes
+
+   [3:10–3:50] The unit of independent work is now a whole water column,
+   not an individual grid point. The outer concurrent loop exposes i-j
+   independence; the ordinary k loop retains the vertical dependencies of a
+   column solve. Repeated muted colors distinguish columns without assigning
+   a distracting unique color to every one. The amber arrows represent
+   ordered work, not data movement or a prescribed GPU thread layout.
+   This code is a schematic pattern, not an extracted full solver.
+   Real column solvers can require private work arrays and an OpenMP fallback.
+
+
+Concurrent slices, ordered integration
+========================================
+
+.. container:: loop-pattern
+
+   .. container:: loop-pattern-figure
+
+      .. image:: img/loop_slices.svg
+         :alt: A highlighted i-k slab with independent columns and ordered downward accumulation; j selects independent slices.
+
+   .. container:: loop-pattern-code
+
+      **Parallel columns within each slice**
+
+      .. code:: fortran
+
+         do concurrent (j=1:nj)
+           do k=1,nk
+             do concurrent (i=1:ni)
+               s(i,j) = s(i,j) + u(i,j,k)
+             enddo
+           enddo
+         enddo
+
+      Concurrent ``j`` slices and ``i`` columns;
+      serial accumulation in ``k``.
+
+.. container:: notes
+
+   [3:50–4:30] Flattening this into one concurrent loop would be wrong:
+   each column's accumulation must retain its validated vertical order.
+   Different j slices are independent, and within each slice the i loop
+   updates independent columns side by side. This j-k-i traversal preserves
+   the contiguous i dimension useful to CPU execution. The column and slice
+   versions expose related horizontal independence but organize the ordered
+   vertical work differently. For this pattern NVIDIA can choose 32 by 4
+   thread blocks; that is a compiler choice, not a Fortran guarantee.
+   The sketch shows computational dependencies, not CUDA launch geometry.
 
 
 Keep the data on the device
@@ -231,7 +320,7 @@ In MOM6, persistent fields stay resident **across kernels**.
 
 .. container:: notes
 
-   [3:30–4:30] This is a compact illustration of the data lifecycle, not a
+   [4:30–5:30] This is a compact illustration of the data lifecycle, not a
    prescription to copy fields around every kernel. Real model timesteps
    contain thousands of kernels, so those transfers would be devastating.
    Persistent fields are mapped during initialization and retained on the GPU.
@@ -239,35 +328,6 @@ In MOM6, persistent fields stay resident **across kernels**.
    visible to kernels generated from do concurrent: interoperability is an
    explicit toolchain requirement. Derived types require care as well: mapping
    the object and its array components is one coordinated lifetime problem.
-
-
-Parallel horizontally, ordered vertically
-=========================================
-
-.. code:: fortran
-
-   do concurrent (j=js:je)
-     do k=1,nz
-       do concurrent (i=is-1:ie)
-         uhbt(i,j) = uhbt(i,j) + uh0(i,j,k)
-       enddo
-     enddo
-   enddo
-
-* Independent horizontal columns
-* Ordered vertical accumulation
-* CPU-friendly ``j-k-i`` traversal
-
-.. container:: notes
-
-   [4:30–5:30] Flattening everything into one concurrent loop would be wrong
-   here. Each horizontal column is independent, but its sum must follow the
-   validated vertical order. Nested concurrency expresses that distinction
-   without discarding the contiguous i-loop important to CPU execution. For
-   this pattern NVIDIA can produce 32 by 4 thread blocks in the horizontal
-   plane while keeping the k accumulation serial. That geometry is a compiler
-   implementation detail, not a promise of the Fortran standard. Source loop
-   hierarchy is both a correctness decision and a performance decision.
 
 
 Blocking reconciles CPU and GPU
@@ -299,13 +359,33 @@ Runtime block extents — same solver, same module API.
 Traverse blocks, launch local kernels
 ==================================================
 
-.. raw:: html
+.. container:: loop-pattern block-traversal
 
-   <object type="image/svg+xml" data="img/block_loop_title.svg"
-     style="width: 570px; height: 460px; border: 0;"
-     aria-label="Animated traversal of a 32 by 32 domain in 8 by 4 tiles">
-     <img src="img/block_shapes.svg" alt="Computational block shapes">
-   </object>
+   .. container:: loop-pattern-figure
+
+      .. raw:: html
+
+         <object type="image/svg+xml" data="img/block_loop_title.svg"
+           aria-label="Animated traversal of a 32 by 32 domain in 8 by 4 tiles">
+           <img src="img/block_shapes.svg" alt="Computational block shapes">
+         </object>
+
+   .. container:: loop-pattern-code
+
+      .. code:: fortran
+
+         do jsb=js,je,njj ; do isb=is,ie,nii
+           jeb = min(je, jsb+njj-1)
+           ieb = min(ie, isb+nii-1)
+           iie = ieb - isb + 1
+           jje = jeb - jsb + 1
+
+           do concurrent (jj=1:jje, ii=1:iie)
+             i = isb + ii - 1
+             j = jsb + jj - 1
+             ! Work on this block
+           enddo
+         enddo ; enddo
 
 Outer loops select a tile; ``do concurrent`` expresses its independent work.
 
@@ -317,6 +397,12 @@ Outer loops select a tile; ``do concurrent`` expresses its independent work.
    compact kernels. The moving point illustrates index coverage, not serial
    GPU execution: do concurrent iterations need not follow this scan order.
    This is computational tiling, not a prescribed GPU thread-block shape.
+   The code is a shortened pattern from MOM_full_convection.F90: serial
+   jsb/isb loops choose each block, min clips its bounds at the domain edge,
+   and iie/jje set the local extents. ii/jj index block-sized arrays, while
+   i/j address full-domain fields. The actual physics and locality macros
+   are omitted here; this is not the complete convection solver. The same
+   outer-loop structure appears in several other MOM6 modules.
    Do not wait for the entire animation cycle.
 
 

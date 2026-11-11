@@ -34,6 +34,7 @@ def write_svg(args):
 
     label = html.escape(args.label)
     code = html.escape(args.code)
+    indices = html.escape(args.indices)
 
     svg = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {view_width:g} {view_height:g}" role="img" aria-labelledby="title desc">
@@ -84,7 +85,7 @@ def write_svg(args):
     <text class="code" x="0" y="91">jsb, isb</text>
     <text class="small" x="0" y="134">inner kernel</text>
     <text class="code" x="0" y="157">{code}</text>
-    <text class="code" x="0" y="179">  (k,jj,ii)</text>
+    <text class="code" x="0" y="179">  {indices}</text>
   </g>
 
   <script><![CDATA[
@@ -199,6 +200,7 @@ def main():
     parser.add_argument('--hold-frames', type=int, default=10, help='pause before restarting')
     parser.add_argument('--label', default='runtime block decomposition')
     parser.add_argument('--code', default='do concurrent')
+    parser.add_argument('--indices', default='(k,jj,ii)', help='displayed kernel indices')
     parser.add_argument('--margin-left', type=float, default=40.0)
     parser.add_argument('--margin-top', type=float, default=34.0)
     parser.add_argument('--margin-bottom', type=float, default=66.0)

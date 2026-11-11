@@ -360,10 +360,10 @@ body {
 }
 
 .reveal section video {
-  margin: 15px 0px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 4px solid #000;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
+   margin: 15px 0px;
+   background: transparent;
+   border: 0;
+   box-shadow: none; }
 
 .reveal section img.plain {
   border: 0;
@@ -502,3 +502,36 @@ body {
   height: 48px;
   margin: 0 auto;
 }
+
+/* One loop pattern per slide: geometry beside the source expressing it. */
+.reveal .loop-pattern {
+  display: grid;
+  grid-template-columns: 44% minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+  margin: 28px 0;
+}
+.reveal .loop-pattern-figure img { width: 100%; max-width: 100%; }
+.reveal .loop-pattern-code { text-align: left; font-size: 0.78em; }
+.reveal .loop-pattern-code pre {
+  width: 100%;
+  font-size: 0.82em;
+  line-height: 1.4;
+  margin: 24px 0;
+}
+.reveal .loop-pattern-code pre code { padding: 14px; }
+.reveal .block-traversal {
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 24px;
+}
+.reveal .block-traversal object {
+  width: 100%;
+  height: 460px;
+  border: 0;
+}
+.reveal .block-traversal .loop-pattern-code pre {
+  width: max-content;
+  font-size: 0.69em;
+  line-height: 1.2;
+}
+.reveal .block-traversal pre code { max-height: none; }
