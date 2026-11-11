@@ -16,7 +16,7 @@ plt.rcParams.update({"font.family": "sans-serif",
                      "font.sans-serif": ["DejaVu Sans", "Liberation Sans", "Arial"]})
 TEAL, AMBER, INK = "#087E8B", "#B26020", "#12364A"
 NI, NJ, NK = 4, 3, 5
-LAYERS = ["#B9D1EA", "#B3DCDD", "#D2C9E5", "#F1D29B", "#C6DDB5"]
+CELL_COLORS = ["#B9D1EA", "#B3DCDD", "#D2C9E5", "#F1D29B", "#C6DDB5"]
 COLUMNS = ["#B3DCDD", "#D2C9E5", "#F1D29B", "#B9D1EA"]
 
 
@@ -37,7 +37,7 @@ for kind in ("points", "columns", "slices"):
     def face(vertices, i, j, k, side):
         selected = kind != "slices" or j == 0
         if kind == "points":
-            color = LAYERS[k]
+            color = CELL_COLORS[(i + 2*j + 3*k) % len(CELL_COLORS)]
         elif kind == "columns":
             color = COLUMNS[(i + 2*j) % len(COLUMNS)]
         else:

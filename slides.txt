@@ -201,7 +201,7 @@ Fortran describes independent work
    .. container:: loop-pattern-figure
 
       .. image:: img/loop_points.svg
-         :alt: A fully filled ocean grid, colored by layer; i, j, and k are all concurrent.
+         :alt: A fully filled ocean grid with alternating checkerboard cell colors; i, j, and k are all concurrent.
 
    .. container:: loop-pattern-code
 
@@ -215,7 +215,7 @@ Fortran describes independent work
 
       Every ``(i,j,k)`` iteration is independent.
 
-      Colors distinguish layers, not execution order.
+      Alternating colors emphasize independent cells, not execution order.
 
 ``do concurrent`` does not itself require GPU execution.
 
