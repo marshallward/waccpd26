@@ -122,8 +122,8 @@ Layer-based Dynamics
 
 .. class:: auto-animate animate-group-solvers solver-overview
 
-Solvers of MOM6
-===============
+Concurrency of MOM6 solvers
+===========================
 
 .. container:: solver-ocean
 
@@ -366,7 +366,7 @@ Traverse blocks, launch local kernels
       .. raw:: html
 
          <object type="image/svg+xml" data="img/block_loop_title.svg"
-           aria-label="Animated traversal of a 32 by 32 domain in 8 by 4 tiles">
+           aria-label="Animated traversal of a 26 by 26 domain in 8 by 4 tiles, clipped at the right and bottom edges">
            <img src="img/block_shapes.svg" alt="Computational block shapes">
          </object>
 
@@ -392,8 +392,10 @@ Outer loops select a tile; ``do concurrent`` expresses its independent work.
 .. container:: notes
 
    [6:30–7:00] The animation makes the two levels concrete. Ordinary outer
-   loops choose an 8 by 4 tile in this illustrative 32 by 32 domain. Within
-   each tile we reconstruct global indices from block-local indices and run
+   loops choose an 8 by 4 tile in this illustrative 26 by 26 domain. The
+   right edge has 2 by 4 tail tiles, the bottom has 8 by 2 tiles, and the
+   final corner is 2 by 2: min clips the bounds rather than padding the grid.
+   Within each tile we reconstruct global indices from block-local indices and run
    compact kernels. The moving point illustrates index coverage, not serial
    GPU execution: do concurrent iterations need not follow this scan order.
    This is computational tiling, not a prescribed GPU thread-block shape.

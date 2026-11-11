@@ -22,12 +22,9 @@ def block_pair(value):
 
 def write_svg(args):
     block_i, block_j = args.block
-    if args.n % block_i or args.n % block_j:
-        raise SystemExit('--n must be divisible by both block dimensions')
-
     grid_size = args.n * args.cell
-    block_width = block_i * args.cell
-    block_height = block_j * args.cell
+    block_width = min(block_i, args.n) * args.cell
+    block_height = min(block_j, args.n) * args.cell
     active_size = args.cell - 2 * args.pad
     view_width = args.margin_left + grid_size + args.gap + args.info_width
     view_height = max(args.margin_top + grid_size + args.margin_bottom, args.height)
@@ -39,7 +36,7 @@ def write_svg(args):
     svg = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {view_width:g} {view_height:g}" role="img" aria-labelledby="title desc">
   <title id="title">Animated {args.n} by {args.n} block loop</title>
-  <desc id="desc">A highlighted point scans through a {args.n} by {args.n} grid in {block_i} by {block_j} blocks.</desc>
+   <desc id="desc">A highlighted point scans through a {args.n} by {args.n} grid in {block_i} by {block_j} blocks, clipped at the domain edges.</desc>
   <defs>
     <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
       <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -137,9 +134,19 @@ def write_svg(args):
     }}
 
     let step = 0;
-    const stepsPerBlock = blockI * blockJ;
-    const blocksPerRow = n / blockI;
-    const blockRows = n / blockJ;
+    // Match the outer block loops and clipped local extents in the code.
+    const traversal = [];
+    for (let jsb = 0; jsb < n; jsb += blockJ) {{
+      for (let isb = 0; isb < n; isb += blockI) {{
+        const width = Math.min(blockI, n - isb);
+        const height = Math.min(blockJ, n - jsb);
+        for (let jj = 0; jj < height; jj++) {{
+          for (let ii = 0; ii < width; ii++) {{
+            traversal.push({{i: isb + ii, j: jsb + jj, isb, jsb, width, height}});
+          }}
+        }}
+      }}
+    }}
     const totalSteps = n * n + holdFrames;
 
     function clearVisited() {{
@@ -158,21 +165,13 @@ def write_svg(args):
         return;
       }}
 
-      const blockIndex = Math.floor(step / stepsPerBlock);
-      const local = step % stepsPerBlock;
-      const blockCol = blockIndex % blocksPerRow;
-      const blockRow = Math.floor(blockIndex / blocksPerRow) % blockRows;
-      const ii = local % blockI;
-      const jj = Math.floor(local / blockI);
-      const i = blockCol * blockI + ii;
-      const j = blockRow * blockJ + jj;
-      const bx = blockCol * blockI * cell;
-      const by = blockRow * blockJ * cell;
-
-      blockRect.setAttribute('x', bx);
-      blockRect.setAttribute('y', by);
-      blockFill.setAttribute('x', bx);
-      blockFill.setAttribute('y', by);
+      const {{i, j, isb, jsb, width, height}} = traversal[step];
+      for (const rect of [blockRect, blockFill]) {{
+        rect.setAttribute('x', isb * cell);
+        rect.setAttribute('y', jsb * cell);
+        rect.setAttribute('width', width * cell);
+        rect.setAttribute('height', height * cell);
+      }}
       active.setAttribute('x', i * cell + pad);
       active.setAttribute('y', j * cell + pad);
       visited[j][i].classList.add('visited');

@@ -66,7 +66,8 @@ img/block_shapes.svg: asy/block_shapes.asy Makefile | img
 	$(ASY) -f svg $< -o $(basename $@)
 
 img/block_loop_title.svg: scripts/gen_block_loop_title.py Makefile | img
-	$(PYTHON) $< -o $@ --n 32 --block 8,4 --frame-ms 48 --indices '(jj,ii)'
+	$(PYTHON) $< -o $@ --n 26 --block 8,4 --frame-ms 48 --indices '(jj,ii)' \
+	  --height 0 --margin-left 8 --margin-bottom 8
 
 $(SOLVER_FIGURES) &: scripts/gen_kernel_types.py requirements.txt Makefile | img
 	$(PYTHON) $< --output-dir img
