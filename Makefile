@@ -21,7 +21,7 @@ SINGLE_DEVICE_DATA = $(wildcard $(CPU_RUN)/*.out $(GPU_RUN)/*.out $(NEW_GPU_RUN)
 H100_DATA = $(foreach run,$(H100_RUNS),$(wildcard $(run)/*.out))
 SOLVER_FIGURES = img/kernel_layer.svg img/kernel_column.svg img/kernel_slice.svg
 LOOP_FIGURES = img/loop_points.svg img/loop_columns.svg img/loop_slices.svg
-FIGURES = $(SOLVER_FIGURES) $(LOOP_FIGURES) img/ocean_layers.svg img/block_shapes.svg img/block_loop_title.svg img/fms_mpi.svg \
+FIGURES = $(SOLVER_FIGURES) $(LOOP_FIGURES) img/ocean_layers.svg img/block_shapes.svg img/block_regions.svg img/block_loop_title.svg img/fms_mpi.svg \
           img/dycore_and_main.svg img/dycore_and_main_comparison.svg \
           img/module_scaling.svg img/module_scaling_comparison.svg \
           img/dycore_speedup.svg img/h100_module_timings.svg
@@ -64,6 +64,9 @@ media:
 
 img/block_shapes.svg: asy/block_shapes.asy Makefile | img
 	$(ASY) -f svg $< -o $(basename $@)
+
+img/block_regions.svg: scripts/gen_block_regions.py requirements.txt Makefile | img
+	$(PYTHON) $< -o $@
 
 img/block_loop_title.svg: scripts/gen_block_loop_title.py Makefile | img
 	$(PYTHON) $< -o $@ --n 26 --block 8,4 --frame-ms 48 --indices '(jj,ii)' \

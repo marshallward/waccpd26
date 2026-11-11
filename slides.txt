@@ -312,27 +312,32 @@ Concurrent slices, ordered integration
 Blocking reconciles CPU and GPU
 ===============================
 
-.. image:: img/block_shapes.svg
+.. image:: img/block_regions.svg
    :width: 90%
-   :alt: Layer-oriented, column-oriented, and GPU-oriented computational blocks.
+   :alt: Matching grid diagrams: a shaded layer on the CPU side represents a cache-friendly part; the entire local domain is shaded on the GPU side to represent a larger kernel work region, not thread geometry or independence in all dimensions.
 
-CPU: retain locality. GPU: expose larger work units.
+``do concurrent`` expresses **independence**; the GPU compiler forms **kernels**.
 
-Runtime block extents — same solver, same module API.
+Blocking chooses the work region — same solver, different extents.
 
 .. container:: notes
 
-   [4:30–5:30] Nested loops alone do not solve every mapping problem. Larger
-   solvers contain multiple phases and helper calls that can obscure the
-   useful parallel structure. Explicit computational blocks keep ordinary
-   control flow outside compact kernels and bound temporary storage. The same
-   source can use smaller or anisotropic blocks for CPU locality and larger
-   horizontal blocks for GPU concurrency. These are algorithmic tiles, not
-   necessarily CUDA thread blocks. The key is to make execution geometry a
-   configuration choice rather than maintain separate solver implementations.
-   Wrappers retain the existing module API, so callers such as RK2 do not
-   need to know about the decomposition. Ordinary Fortran controls traversal;
-   the inner kernel only sees regular, block-local work.
+   [4:30–5:30] Distinguish concurrency from a kernel. Fortran do concurrent
+   describes independent iterations, not a GPU launch. In our GPU compilation
+   path these loops also delimit work the compiler turns into kernels; the
+   exact mapping and kernel formation are compiler decisions, not Fortran
+   guarantees. We therefore introduce a computational blocking layer to
+   choose how much work is presented at once. On CPUs we select cache-friendly
+   parts, illustrated by a layer on the left. On GPUs we expose a larger work
+   region, illustrated by the whole local domain on the right, and let the
+   compiler map its independent iterations onto GPU threads and thread blocks.
+   Shading denotes the work region, not concurrency in every dimension:
+   ordered k work can remain serial inside the kernel. The picture is an
+   illustrative contrast, not a requirement to launch the entire domain or
+   a claim that GPU hardware solves algorithmic dependencies. Computational
+   blocks also bound temporary storage and keep control flow outside compact
+   kernels. Runtime extents preserve the same solver and module API; these
+   algorithmic tiles are distinct from CUDA thread blocks.
 
 
 Traverse blocks, launch local kernels
@@ -366,7 +371,7 @@ Traverse blocks, launch local kernels
            enddo
          enddo ; enddo
 
-Outer loops select a tile; ``do concurrent`` expresses its independent work.
+The blue boundary shows each GPU kernel.  The CPU steps through each block.
 
 .. container:: notes
 

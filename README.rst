@@ -49,7 +49,7 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates the sixteen generated SVGs. ``make clean``
+``make figures`` regenerates the seventeen generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
@@ -104,6 +104,8 @@ Figure generation
      - ``scripts/gen_kernel_types.py``, adapted from the GTC poster
    * - Fully concurrent, column, and nested-slice loop diagrams
      - ``scripts/gen_loop_patterns.py``
+   * - CPU and GPU computational work regions
+     - ``scripts/gen_block_regions.py``
    * - Moving ocean-layer schematic
      - ``scripts/gen_ocean_layers.py``, adapted from the GTC poster
    * - FMS/MPI communication diagram
