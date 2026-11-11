@@ -62,7 +62,7 @@ ax.annotate("Layer", (3.2, np.interp(3.2, x, interfaces[2])-.2),
             (1.8, 3.62), fontsize=20, color=TEAL,
             arrowprops=dict(arrowstyle="->", color=TEAL, lw=1.5), va="center")
 ax.annotate("Column", (7.42, np.interp(7.42, x, interfaces[0])), (6.3, 3.62),
-            fontsize=20, color=AMBER, va="center",
+            fontsize=20, color=AMBER, va="center", zorder=10,
             arrowprops=dict(arrowstyle="->", color=AMBER, lw=1.5))
 # Crop unused canvas while retaining the labels, arrows, and hatched seabed.
 crop = Bbox.from_extents(.75, np.min(interfaces[-1]) - .34, 10.6, 3.85)
@@ -71,25 +71,23 @@ fig.savefig(args.output, transparent=True, bbox_inches=crop_inches)
 
 if not args.static:
     # Native SVG path animation: no video, canvas, or external JS dependency.
-    # Keep the column band and the bottom interface exactly stationary.
+    # Keep the seabed and column x coordinates fixed. Interfaces move through
+    # the column, and its side walls extend up to the moving ocean surface.
     wave_x = np.unique(np.concatenate((np.linspace(x[0], x[-1], 120), [left, right])))
     wave_phase = (wave_x - .9) / 9.55
     base = np.array([np.interp(wave_x, x, interface) for interface in interfaces])
-    distance = np.maximum(np.maximum(left - wave_x, wave_x - right), 0)
-    envelope = 1 - np.exp(-(distance / .8)**2)
 
     def wave_interfaces(angle):
         traveling = np.sin(2*np.pi*wave_phase - angle) - np.sin(2*np.pi*wave_phase)
         depth_weight = np.linspace(1, 0, 6)[:, None]
-        return base + .065 * depth_weight * envelope * traveling
+        #return base + .065 * depth_weight * traveling
+        return base + .1 * depth_weight * traveling
 
     # Validate a denser sampling than the exported keyframes, including crop
-    # bounds and the stationary band. Linear SVG interpolation preserves order.
+    # bounds and fixed seabed. Linear SVG interpolation preserves order.
     for angle in np.linspace(0, 2*np.pi, 257):
         wave = wave_interfaces(angle)
         assert np.all(wave[:-1] > wave[1:]), "Ocean interfaces crossed"
-        np.testing.assert_allclose(wave[:, (wave_x >= left) & (wave_x <= right)],
-                                   base[:, (wave_x >= left) & (wave_x <= right)])
         np.testing.assert_allclose(wave[-1], base[-1])
         assert wave.min() > crop.y0 and wave.max() < crop.y1
 
@@ -100,9 +98,9 @@ if not args.static:
     root = tree.getroot()
     root.set("role", "img")
     root.set("tabindex", "0")
-    root.set("aria-label", "Moving ocean layers around a stationary column. Click or press Enter to pause.")
+    root.set("aria-label", "Moving ocean layers through a column with fixed horizontal bounds. Click or press Enter to pause.")
     title = ET.Element(f"{{{svg_ns}}}title")
-    title.text = "Moving ocean layers; stationary highlighted column"
+    title.text = "Moving ocean layers; column walls fixed horizontally"
     root.insert(0, title)
 
     def svg_points(xx, yy):
@@ -124,7 +122,8 @@ if not args.static:
         path = ET.SubElement(group, f"{{{svg_ns}}}path", {"d": paths[0], "style": style})
         ET.SubElement(path, f"{{{svg_ns}}}animate", {
             "attributeName": "d", "values": ";".join(paths),
-            "dur": "10s", "repeatCount": "indefinite", "calcMode": "linear",
+            #"dur": "10s", "repeatCount": "indefinite", "calcMode": "linear",
+            "dur": "6s", "repeatCount": "indefinite", "calcMode": "linear",
         })
 
     for k in range(5):
@@ -137,6 +136,24 @@ if not args.static:
         paths = [outline(svg_points(wave_x, wave[k])) for wave in frames]
         color, width = (TEAL, 1.5) if k in (2, 3) else ("#8BAEBB", 1)
         animate(f"ocean-interface-{k}", paths, f"fill:none;stroke:{color};stroke-width:{width}")
+
+    # Use the same samples and keyframes on both sides of each column wall,
+    # so the highlighted cells stay aligned with the moving ocean interfaces.
+    column_mask = (wave_x >= left) & (wave_x <= right)
+    column_x = wave_x[column_mask]
+    for k in range(5):
+        paths = [outline(np.concatenate((svg_points(column_x, wave[k, column_mask]),
+                                         svg_points(column_x[::-1], wave[k+1, column_mask][::-1]))), True)
+                 for wave in frames]
+        animate(f"column-cell-{k}", paths,
+                "fill:#F0C477;fill-opacity:.85;stroke:#F0C477;stroke-opacity:.85")
+        paths = [outline(svg_points(column_x, wave[k, column_mask])) for wave in frames]
+        animate(f"column-interface-{k}", paths, f"fill:none;stroke:{AMBER};stroke-width:1.2")
+    for edge in (left, right):
+        edge_index = np.flatnonzero(wave_x == edge)[0]
+        paths = [outline(svg_points([edge, edge], [wave[-1, edge_index], wave[0, edge_index]]))
+                 for wave in frames]
+        animate(f"column-edge-{edge}", paths, f"fill:none;stroke:{AMBER};stroke-width:1.5")
 
     # An object embedding allows these small accessibility/playback controls.
     # Without script or SMIL support, the SVG still contains its original frame.

@@ -445,6 +445,20 @@ body {
 .reveal section img { object-fit: contain; }
 .reveal .slides section .notes { display: none; }
 
+/* Connect the model's scientific use to the GPU-porting constraints. */
+.reveal .mom6-intro {
+  display: grid;
+  grid-template-columns: 58% 1fr;
+  gap: 32px;
+  align-items: center;
+  margin: 26px 0;
+}
+.reveal .mom6-intro-picture img { width: 100%; max-width: 100%; }
+.reveal .mom6-intro-picture p { margin: 8px 0; font-size: 0.58em; }
+.reveal .mom6-intro-context { font-size: 0.76em; text-align: left; }
+.reveal .mom6-intro-context p { margin: 16px 0; }
+.reveal .mom6-intro-context li { margin: 12px 0; }
+
 /* Solver overview: GTC poster schematics, sized for a single talk slide. */
 .reveal .solver-grid {
   display: grid;
@@ -473,6 +487,13 @@ body {
   height: 150px;
   background: #edf5f6;
   border-radius: 8px;
+}
+.reveal .solver-intro .solver-ocean {
+  margin: 30px auto 0;
+}
+.reveal .solver-intro .solver-ocean object {
+  width: 768px;
+  height: 450px;
 }
 .reveal .solver-branches {
   display: block;

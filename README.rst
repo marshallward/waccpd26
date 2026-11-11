@@ -1,9 +1,9 @@
 WACCPD 2026 presentation draft
 =============================
 
-15-minute slot: **17 main slides (including title), 14:30 of planned speech,
-0:30 margin**, plus an optional August/November timing comparison beneath
-the main timing slide and six vertical backup slides under the conclusion.
+15-minute slot: **18 main slides (including title), 14:30 of planned speech,
+0:30 margin**, plus optional August/November comparisons beneath the main
+timing and module slides, and six vertical backup slides under the conclusion.
 Speaker notes and elapsed-time cues are in ``slides.txt`` (reStructuredText).
 
 View and edit
@@ -49,7 +49,7 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates the twelve generated SVGs. ``make clean``
+``make figures`` regenerates the thirteen generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
@@ -72,8 +72,12 @@ as in the September developer talk. The resulting URL is
 https://marshallward.org/waccpd26/.
 
 Generated HTML, figure SVGs, the Reveal.js installation, and deployment output
-are ignored. Three static assets under ``img/`` are retained in Git:
-``bg_gfdl.jpg``, ``gyre.png``, and ``corad_blocks.svg``.
+are ignored. Four static assets under ``img/`` are retained in Git:
+``bg_gfdl.jpg``, ``gyre.png``, ``corad_blocks.svg``, and ``mom6_regional.png``.
+The regional image is copied unchanged from the GTC poster's
+``assets/mom6_regional.png``: Gulf Stream and eddies in the 5 km Northwest
+Atlantic configuration. It provides scientific context on ``What is MOM6?``;
+it is not the timing benchmark or evidence of a GPU-validated production run.
 The old ``figures/*.pdf`` copies are no longer build inputs; any existing
 local copies are left untouched and ignored.
 
@@ -132,12 +136,37 @@ The ocean sketch above the diagrams comes from the poster's
 ``scripts/ocean_layers.py``. It schematically depicts moving ALE layers,
 not simulation output; the branching layout relates the ocean domain to
 computational views rather than indicating a sequence of solver execution.
-The local SVG gently animates the interfaces on a ten-second loop while
-keeping the highlighted column and seabed stationary. The generator checks
+The local SVG animates the interfaces on a six-second loop. The column's left
+and right walls stay fixed horizontally, while its internal layer boundaries
+and top follow the surrounding waves; the seabed remains stationary. The generator checks
 that interfaces never cross. Click the picture (or focus it and press Enter)
 to pause/resume; reduced-motion preferences pause it automatically. Use
 ``python3 scripts/gen_ocean_layers.py --static -o /tmp/opencode/ocean_layers.svg``
 for a still export. No animation library or video file is required.
+
+RST slide transitions
+---------------------
+
+The two ``Solvers of MOM6`` slides use Reveal.js Auto-Animate. The first
+shows the ocean sketch large and centered; on the next advance it moves up
+and shrinks while the three solver diagrams fade in. This uses the existing
+solver explanation's timing budget rather than adding speaking time.
+
+``scripts/reveal_attributes.lua`` converts RST classes into Reveal attributes
+during the Pandoc build, without editing generated HTML. Mark adjacent slide
+headings like this::
+
+   .. class:: auto-animate animate-group-solvers
+
+   Solvers of MOM6
+   ===============
+
+``auto-animate`` enables the effect; matching ``animate-group-NAME`` classes
+restrict it to that sequence. Containers with matching ``animate-id-NAME``
+classes receive matching ``data-id`` values. Raw embedded elements can use
+``data-id`` directly, as the animated ocean SVG objects do. Position and size
+differences are authored in ``gfdl.css``; the filter sets a one-second
+ease-in-out transition. Other slides retain the normal sliding effect.
 
 Sources and scope
 -----------------

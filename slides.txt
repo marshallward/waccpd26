@@ -18,28 +18,45 @@ Performance-portable MOM6 on GPUs
    not a completed port of the entire production model.
 
 
-Acceleration without disruption
-===============================
+What is MOM6?
+==============
 
-MOM6 is a community and operational ocean model.
+.. container:: mom6-intro
 
-.. list-table::
-   :widths: 28 72
+   .. container:: mom6-intro-picture
 
-   * - **Preserve**
-     - One Fortran codebase for CPU and GPU
-   * - **Verify**
-     - Retain validated, bitwise-identical answers
-   * - **Perform**
-     - Gain GPU speed without losing CPU performance
+      .. image:: img/mom6_regional.png
+         :alt: Gulf Stream and eddies in MOM6's five-kilometer Northwest Atlantic regional configuration.
 
-Port the model, not just an isolated kernel.
+      Gulf Stream and eddies: Northwest Atlantic, 5 km.
+
+   .. container:: mom6-intro-context
+
+      **The Modular Ocean Model**
+
+      A community ocean model for regional and global simulations,
+      forecasting, and climate research.
+
+      **Operational code, evolving science**
+
+      * Validated answers → **bit reproducibility**
+      * Ongoing CPU runs → **no CPU slowdown**
+      * Shared development → **one codebase**
+
+Accelerate the model without disrupting the science.
 
 .. container:: notes
 
-   [0:30–1:15] MOM6 supports ongoing scientific research and operational
-   applications. A replacement GPU implementation would create a second code
-   to maintain and validate. Changing answers is also disruptive: we need to
+   [0:30–1:15] MOM6 is the Modular Ocean Model, an open-source community ocean
+   model used for regional and global simulations, forecasting, and climate
+   research. The image, reused from the GTC poster, shows Gulf Stream and
+   eddy structure in a 5 km Northwest Atlantic configuration. It illustrates
+   the scientific application, not the GPU timing benchmark or a claim that
+   this particular configuration is operationally deployed or GPU-validated.
+   The model supports both ongoing research and operational applications:
+   it is not a disposable benchmark kernel. A replacement GPU implementation
+   would create a second code to maintain and validate. Changing answers is
+   also disruptive: we need to
    distinguish scientific changes from porting errors. CPU execution remains
    important, so a successful port must preserve that path and its performance.
    The approach is deliberately incremental, retaining the model's development
@@ -74,6 +91,10 @@ Different flows — different computational demands.
    visible; use the controls if browser autoplay is blocked.
 
 
+.. _solvers-ocean-intro:
+
+.. class:: auto-animate animate-group-solvers solver-intro
+
 Solvers of MOM6
 ===============
 
@@ -81,8 +102,33 @@ Solvers of MOM6
 
    .. raw:: html
 
-      <object type="image/svg+xml" data="img/ocean_layers.svg"
-        aria-label="Animated ocean layers around a stationary highlighted column; click to pause">
+      <object type="image/svg+xml" data="img/ocean_layers.svg" data-id="ocean-sketch"
+        aria-label="Animated ocean layers through a highlighted column with fixed horizontal bounds; click to pause">
+        <img src="img/ocean_layers.svg" alt="Ocean layers and a highlighted column">
+      </object>
+
+.. container:: notes
+
+   [1:45–2:00] Start with the ocean rather than the computational grids.
+   The dynamic core advances velocities and layer thicknesses. These moving
+   layers use ALE, or Arbitrary Lagrangian–Eulerian coordinates; the picture
+   is a schematic, not model output. Advance once: the ocean sketch moves
+   up and shrinks as three computational views appear beneath it.
+
+
+.. _solvers-of-mom6:
+
+.. class:: auto-animate animate-group-solvers solver-overview
+
+Solvers of MOM6
+===============
+
+.. container:: solver-ocean
+
+   .. raw:: html
+
+      <object type="image/svg+xml" data="img/ocean_layers.svg" data-id="ocean-sketch"
+        aria-label="Animated ocean layers through a highlighted column with fixed horizontal bounds; click to pause">
         <img src="img/ocean_layers.svg" alt="Ocean layers and a highlighted column">
       </object>
 
@@ -121,10 +167,7 @@ Solvers of MOM6
 
 .. container:: notes
 
-   [1:45–2:30] The dynamic core advances velocities and layer thicknesses.
-   Start with the ocean-layer sketch: these moving layers use ALE, or
-   Arbitrary Lagrangian–Eulerian coordinates. It is a schematic, not model
-   output. The branches connect the physical domain to three useful
+   [2:00–2:30] The branches connect the physical domain to three useful
    computational views; they do not depict a sequence of model operations.
    We classify its computations by dependency, not by the physical equation.
    Layered work offers horizontal concurrency and sometimes concurrency across
@@ -383,8 +426,8 @@ Small domains favor CPU; larger domains amortize GPU overhead.
    [9:30–10:45] The top panel shows time per step; the bottom shows CPU time
    divided by GPU time. The GPU curve uses the November 9 run series;
    the CPU reference is unchanged. The vertical subslide preserves the
-   August/November comparison. The module plots also overlay both GPU series,
-   labeled by date. Build/configuration equivalence between the GPU series
+   August/November comparison. The module plots follow the same primary versus
+   comparison-subslide layout. Build/configuration equivalence between the GPU series
    still needs review before attributing differences to a specific change.
    Small cases provide insufficient work to keep the GPU
    occupied and amortize fixed launch costs. As the horizontal domain grows,
@@ -421,27 +464,46 @@ Structure guides porting, not speedup
 
 .. image:: img/module_scaling.svg
    :height: 440px
-   :alt: EPYC CPU timings and August 9 and November 9 GH200 timings for six dynamic-core modules across problem sizes.
+   :alt: EPYC CPU and November 9 GH200 timings for six dynamic-core modules across problem sizes.
 
-August baseline: viscosity ~1.2×; pressure/barotropic ~7.4–7.5× at the largest domain.
+Same source, different module performance.
 
 .. container:: notes
 
-   [10:45–12:00] Both GPU series are overlaid with the same date labels and
-   colors as the main-loop figure. The quoted speedups below refer to the
-   original August dataset, not the new November overlay.
-   Do not walk through every panel. Contrast horizontal
-   viscosity, a seemingly favorable layered solver with only about 1.2 times
-   speedup, with the mixed pressure and barotropic components reaching about
-   7.4 and 7.5 times. Vertical friction retains serial column work yet reaches
-   about twice CPU performance. Advection reaches about 1.8 times and
-   continuity about 2.4 times. The dependency taxonomy is useful for deciding
+   [10:45–12:00] The primary panels compare EPYC with the November GPU run
+   series. The vertical subslide preserves the August/November overlay.
+   Do not walk through every panel: contrast horizontal viscosity, a seemingly
+   favorable layered solver, with the mixed pressure and barotropic components.
+   Vertical friction also retains serial column work yet benefits from GPU
+   execution once enough horizontal work is exposed.
+   The dependency taxonomy is useful for deciding
    which loops may be concurrent and which must remain ordered, but realized
    performance also depends on memory access, private storage, launch counts,
    reductions, and the compiler. Integrated speedup is determined by the
    remaining costs, not an average of these module speedups. The figure is
    regenerated from the manuscript logs; its range title now matches the
    plotted sweep and the 64 by 64 reference grid.
+
+
+Modules: August and November
+----------------------------------------
+
+.. image:: img/module_scaling_comparison.svg
+   :height: 440px
+   :alt: EPYC CPU timings and both August 9 and November 9 GH200 timings for six dynamic-core modules across problem sizes.
+
+Same CPU reference; both GH200 run series.
+
+.. container:: notes
+
+   Optional comparison, outside the main talk's timing budget. These are the
+   former three-series module panels. CPU is blue, August GPU orange, and
+   November GPU green. The original manuscript's largest-domain speedups
+   refer to August: about 1.2 times for horizontal viscosity, 1.8 for
+   advection, 2 for vertical friction, 2.4 for continuity, and 7.4–7.5 for
+   pressure/barotropic. Do not apply those numbers to the November curves.
+   Build/configuration equivalence still needs review before attributing
+   changes between the two run series to particular optimizations.
 
 
 The resident model extends across GPUs

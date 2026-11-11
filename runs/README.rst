@@ -17,9 +17,9 @@ Single-device comparison
 
 ``gh200_p1_20261109/``
    New one-GH200 run series supplied November 9, 2026. Used for the primary
-   main-loop time-per-step figure. A vertical subslide overlays it with the
-   August series; the six-module panels also retain both series, with
-   date-specific legend labels. Both speedup curves use the same EPYC baseline, matching
+   main-loop and six-module time-per-step figures. Each has a vertical
+   subslide overlaying it with the August series, with date-specific legend
+   labels. Both speedup curves use the same EPYC baseline, matching
    configuration numbers and the existing per-step normalization.
    Build/compiler/configuration equivalence
    between the two GPU series has not been independently established here;
