@@ -663,18 +663,34 @@ Same bits on CPU and GPU
 
    .. container:: repro-card
 
-      **Sum using fixed-precision integers**
+      **Make reductions order-independent**
 
       .. raw:: html
 
-         <div class="repro-bins">
-           <div class="repro-sum">sum(<i>a</i>) → ∑<i>a</i><sub>i</sub></div>
-           <div class="repro-bin-weights"><span>2<sup>3N</sup></span><span>2<sup>2N</sup></span><span>2<sup>N</sup></span><span>2<sup>0</sup></span><span>2<sup>−N</sup></span><span>2<sup>−2N</sup></span></div>
-           <div class="repro-bin-values"><span><i>a</i><sub>i,1</sub></span><span><i>a</i><sub>i,2</sub></span><span><i>a</i><sub>i,3</sub></span><span><i>a</i><sub>i,4</sub></span><span><i>a</i><sub>i,5</sub></span><span><i>a</i><sub>i,6</sub></span></div>
-           <div class="repro-bin-caption">Six integer bins · fixed powers of two</div>
+         <div class="repro-reduction" role="img"
+           aria-label="The sum a plus b plus c is decomposed into weighted integer bins. Each value has components weighted by two to the N, one, and two to the minus N. Corresponding bins are added column by column in any order.">
+           <div class="repro-reduction-stage"><span>Floating-point<br>sum</span><code>a + b + c + …</code></div>
+           <span class="repro-reduction-arrow" aria-hidden="true">→</span>
+           <div class="repro-reduction-stage">
+             <span>Integer bins</span>
+             <div class="repro-bin-example">
+               <div class="repro-bin-row repro-bin-weights"><span></span><span>×2<sup>N</sup></span><span>×2<sup>0</sup></span><span>×2<sup>−N</sup></span></div>
+               <div class="repro-bin-row"><span><i>a</i> =</span><span class="repro-bin-cell">a<sub>1</sub></span><span class="repro-bin-cell">a<sub>2</sub></span><span class="repro-bin-cell">a<sub>3</sub></span></div>
+             </div>
+           </div>
+           <span class="repro-reduction-arrow" aria-hidden="true">→</span>
+           <div class="repro-reduction-stage repro-bin-stack">
+             <strong>Sum in any order</strong>
+             <div class="repro-bin-stack-rows">
+             <div class="repro-bin-row"><span></span><span class="repro-bin-cell">a<sub>1</sub></span><span class="repro-bin-cell">a<sub>2</sub></span><span class="repro-bin-cell">a<sub>3</sub></span></div>
+             <div class="repro-bin-row"><span>+</span><span class="repro-bin-cell">b<sub>1</sub></span><span class="repro-bin-cell">b<sub>2</sub></span><span class="repro-bin-cell">b<sub>3</sub></span></div>
+             <div class="repro-bin-row"><span>+</span><span class="repro-bin-cell">c<sub>1</sub></span><span class="repro-bin-cell">c<sub>2</sub></span><span class="repro-bin-cell">c<sub>3</sub></span></div>
+             <div class="repro-bin-row"><span>+</span><span>⋮</span><span>⋮</span><span>⋮</span></div>
+             </div>
+           </div>
          </div>
 
-      ``reproducing_sum``: sum integer bins reproducibly.
+      ``reproducing_sum``: accumulate as fixed-point integers.
 
    .. container:: repro-card
 
@@ -745,8 +761,11 @@ Same bits on CPU and GPU
    illustrates that reassociation can change floating-point results, not
    that the two expressions always differ.
    The grouping, integer-bin, and FMA diagrams are adapted from the GTC 2026
-   poster as native HTML and SVG. The six-bin drawing is schematic, not a specification of
-   bin widths, normalization, or overflow handling.
+   poster as native HTML and SVG. The reduction diagram summarizes the
+   mechanism: distribute floating-point values into fixed-point integer
+   bins, then accumulate without dependence on reduction order. The
+   three-bin example is schematic; bin widths, normalization, and overflow handling are
+   implementation details omitted from the slide.
    The exp_repro diagram shows a shared implementation used on both targets
    to obtain the same bits, without depicting the approximation's internals.
    For input 1, the displayed binary64 value was checked by compiling the

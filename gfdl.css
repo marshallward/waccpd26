@@ -479,12 +479,17 @@ body {
 }
 .reveal .repro-card p { margin: 4px 0; }
 .reveal .repro-expression,
-.reveal .repro-bins {
+.reveal .repro-reduction {
   height: 130px;
   margin: 8px 0;
   text-align: center;
 }
 .reveal .repro-input { color: #087e8b; font-size: 1.2em; }
+.reveal .repro-expression {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .reveal .repro-arrows {
   display: block;
   width: 100%;
@@ -500,23 +505,43 @@ body {
   gap: 12px;
 }
 .reveal .repro-rounding { font-size: 0.8em; margin-top: 4px; }
-.reveal .repro-sum { font-size: 1.15em; margin-bottom: 4px; }
-.reveal .repro-bin-weights,
-.reveal .repro-bin-values {
+.reveal .repro-reduction {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: 1fr 18px 1.25fr 18px 1.2fr;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8em;
 }
-.reveal .repro-bin-weights { font-size: 0.8em; margin-bottom: 5px; }
-.reveal .repro-bin-values {
+.reveal .repro-reduction-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.reveal .repro-reduction-arrow,
+.reveal .repro-reduction-stage strong { color: #087e8b; }
+.reveal .repro-bin-row {
+  display: grid;
+  grid-template-columns: 25px repeat(3, 35px);
+  gap: 3px;
+  align-items: center;
+}
+.reveal .repro-bin-cell {
   border: 1px solid #087e8b;
   background: #edf5f6;
+  line-height: 1.15;
+  padding: 1px 0;
 }
-.reveal .repro-bin-values span + span { border-left: 1px solid #087e8b; }
-.reveal .repro-bin-caption {
-  color: #087e8b;
-  font-size: 0.8em;
-  margin-top: 5px;
+.reveal .repro-bin-weights { font-size: 0.75em; margin-bottom: 5px; }
+.reveal .repro-bin-stack-rows {
+  display: grid;
+  gap: 2px;
+  font-size: 0.9em;
+  line-height: 1.1;
 }
+.reveal .repro-bin-stack { gap: 4px; }
+.reveal .repro-reduction-stage code { white-space: nowrap; font-size: 0.9em; }
 .reveal .repro-card > p:last-child {
   color: #52636b;
   font-size: 0.86em;
