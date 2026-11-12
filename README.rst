@@ -2,8 +2,9 @@ WACCPD 2026 presentation draft
 =============================
 
 15-minute slot: **20 main slides (including title), 14:30 of planned speech,
-0:30 margin**, plus optional August/November comparisons beneath the main
-timing and module slides, and six vertical backup slides under the conclusion.
+0:30 margin**, plus optional dated comparisons beneath the main timing and
+module slides, a detailed-limitations subslide beneath the closing case study,
+and six vertical backup slides under the conclusion.
 Speaker notes and elapsed-time cues are in ``slides.txt`` (reStructuredText).
 
 View and edit
@@ -49,7 +50,7 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates the seventeen generated SVGs. ``make clean``
+``make figures`` regenerates the eighteen generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
@@ -106,6 +107,8 @@ Figure generation
      - ``scripts/gen_loop_patterns.py``
    * - CPU and GPU computational work regions
      - ``scripts/gen_block_regions.py``
+   * - SCA27 continuity-correction portability tradeoff
+     - ``scripts/gen_portability_tradeoff.py`` and ``runs/sca27_continuity_256k.csv``
    * - Moving ocean-layer schematic
      - ``scripts/gen_ocean_layers.py``, adapted from the GTC poster
    * - FMS/MPI communication diagram
@@ -116,6 +119,19 @@ not live references. See ``runs/README.rst`` for provenance and configuration
 selection. Python dependencies are pinned in ``requirements.txt``. Matching
 numerical results does not imply byte-identical SVGs across systems: timestamps,
 font availability, and diagram tool versions can affect output.
+
+The AMD execution statement on ``Standards-based, not limitation-free`` comes
+from Yang et al., *Fortran Standard Parallelism and OpenMP on NVIDIA and AMD
+GPUs: Cross-Architecture Tradeoffs in MOM6* (SCA27 manuscript), sections
+4.3–4.4 and 5. The local reference is
+``~/presentations/gtc2026/SCA27_paper.pdf``; run-log provenance is in
+``~/presentations/SCA27-paper-data/README.md``. Only selected components ran
+on one MI250X GCD, using a separate explicit-OpenMP source, not a complete
+AMD dynamic-core port. These references are not build dependencies and their
+timings are not mixed with the WACCPD GPU figures. The closing slide
+``Independence is not enough`` uses a separately labeled SCA27 component
+experiment; its local data snapshot and import procedure are documented in
+``runs/README.rst``. The detailed limitations are its optional vertical subslide.
 
 All generated performance plots use sans-serif fonts, including math labels,
 with DejaVu Sans preferred. Both plotting scripts use ``--dark`` for white

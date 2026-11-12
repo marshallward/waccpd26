@@ -26,7 +26,7 @@ LOOP_FIGURES = img/loop_points.svg img/loop_columns.svg img/loop_slices.svg
 FIGURES = $(SOLVER_FIGURES) $(LOOP_FIGURES) img/ocean_layers.svg img/block_shapes.svg img/block_regions.svg img/block_loop_title.svg img/fms_mpi.svg \
           img/dycore_and_main.svg img/dycore_and_main_comparison.svg \
           img/module_scaling.svg img/module_scaling_comparison.svg \
-          img/dycore_speedup.svg img/h100_module_timings.svg
+           img/dycore_speedup.svg img/h100_module_timings.svg img/portability_tradeoff.svg
 STATIC_ASSETS = img/bg_gfdl.jpg img/gyre.png img/corad_blocks.svg img/mom6_regional.png
 
 .PHONY: all figures serve clean
@@ -68,6 +68,9 @@ img/block_shapes.svg: asy/block_shapes.asy Makefile | img
 	$(ASY) -f svg $< -o $(basename $@)
 
 img/block_regions.svg: scripts/gen_block_regions.py requirements.txt Makefile | img
+	$(PYTHON) $< -o $@
+
+img/portability_tradeoff.svg: scripts/gen_portability_tradeoff.py runs/sca27_continuity_256k.csv requirements.txt Makefile | img
 	$(PYTHON) $< -o $@
 
 img/block_loop_title.svg: scripts/gen_block_loop_title.py Makefile | img

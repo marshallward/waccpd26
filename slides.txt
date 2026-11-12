@@ -667,8 +667,46 @@ Ten runs each: no CPU regression in this test; mean time **2.1% lower**.
    configuration or confuse it with the cross-hardware performance comparison.
 
 
+Independence is not enough
+==========================
+
+.. image:: img/portability_tradeoff.svg
+   :height: 475px
+   :alt: Continuity correction changes from layer-wise worksharing to a column per thread. On a 512 by 512 by 100 grid, CPU time grows from 71 to 116 ms, H200 time falls from 49 to 26 ms, and one MI250X GCD falls from 1048 to 103 ms. Different compiler mappings produce a portability tradeoff.
+
+Standard Fortran exposes the work; compilers determine the mapping.
+
+.. container:: notes
+
+   [13:15–14:00] One closing example of the gap between independence and an
+   efficient mapping. This is the separate SCA27 continuity-correction study,
+   not the GH200/EPYC benchmark. Layer-wise vertical sums keep i contiguous
+   and k ordered, but require repeated worksharing within a Newton iteration.
+   The column-wise form gives each horizontal face to a thread, which runs
+   its own Newton solve and serial k loops and can stop when that face
+   converges. This is more than a simple loop interchange: convergence control
+   and private iteration state change too. Both forms keep each vertical sum
+   ordered. The colored rows and columns depict solver structure, not a
+   guaranteed team or warp mapping.
+   At 512 by 512 with 100 layers, the rewrite makes this component about 1.6
+   times slower on the 104-core Intel Xeon node, 1.9 times faster on H200,
+   and 10.2 times faster on one MI250X GCD. AMD benefits especially because
+   amdflang's layer-wise lowering incurs repeated generic-mode worksharing
+   overhead; the column form uses SPMD lowering. The difference reflects source,
+   compiler, runtime, and hardware, not a controlled hardware ranking.
+   The AMD component uses a separate explicit-OpenMP source; it is not a
+   full AMD dynamic-core port or evidence that unchanged do concurrent works
+   equally well everywhere. Standard Fortran takes us far, but expressing
+   independence alone does not guarantee an efficient mapping with today's
+   compilers. The vertical subslide retains the detailed limitations.
+   Source: Yang et al., SCA27 manuscript, section 5.3 and figure 4. Values are
+   per-rank mean clock times per dynamics step, taking the fastest of five
+   repeats separately for each platform/form. The local CSV retains all five
+   samples from the source logs. Do not mix these times with WACCPD timings.
+
+
 Standards-based, not limitation-free
-====================================
+------------------------------------
 
 .. list-table::
    :widths: 32 68
@@ -681,20 +719,36 @@ Standards-based, not limitation-free
      - Host-side dispatch; careful component lifetimes
    * - **Runtime control**
      - NVIDIA device selection uses OpenACC; async is outside Fortran
+   * - **AMD execution**
+     - Selected solvers run on one MI250X GCD
 
-Portable source does not yet mean validated performance on every vendor.
+AMD: experimental OpenMP source, not yet a complete dynamic-core port.
 
 .. container:: notes
 
-   [13:15–14:00] The approach is pragmatic: do concurrent is the primary
+   Optional detail, outside the main timing budget. The approach is pragmatic:
+   do concurrent is the primary
    notation, but current compiler limitations require fallbacks. Vertical
    friction uses OpenMP where private local arrays are not reliably supported.
    Some procedures were manually inlined for this compiler release. Objects
    remain useful on the host, but device kernels prefer statically resolved
    calls and explicit array state. Asynchronous execution is a future
-   opportunity, not a measured feature here. Our portability claim is about a
-   standards-based single source strategy; these GPU measurements are NVIDIA
-   results, not a completed cross-vendor performance evaluation.
+   opportunity, not a measured feature here. We have also run selected MOM6
+   components on AMD: vertical viscosity, barotropic stepping, and continuity
+   correction. The SCA27 study uses one MI250X GCD (one of the GPU's two compute
+   dies), not a full MI250X, on grids up to 512 by 512 with 100 layers. These
+   are experimental ports in a separate source using explicit OpenMP target
+   teams distribute parallel do, not evidence that the unchanged do concurrent
+   source or the complete dynamic core runs on AMD. amdflang's offload lowering
+   and support vary across compiler releases. Keep this as evidence of AMD
+   execution and compiler investigation, not a cross-vendor hardware ranking
+   or a claim of end-to-end AMD performance parity. The headline GH200/H100
+   timings in this talk remain separate NVIDIA experiments.
+   Source: Yang et al., Fortran Standard Parallelism and OpenMP on NVIDIA and
+   AMD GPUs: Cross-Architecture Tradeoffs in MOM6, SCA27 manuscript,
+   sections 4.3–4.4 and 5. Local reference: gtc2026/SCA27_paper.pdf; logs and
+   plotting provenance: SCA27-paper-data/README.md. No timing data from that
+   study are merged into this talk's WACCPD comparisons.
 
 
 One codebase, solver-aware acceleration

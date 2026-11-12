@@ -70,6 +70,41 @@ and expand automatically to fit the largest measured speedup;
 module panels report time per step. Plot options and sizes follow the
 manuscript's Makefile, with the module title corrected to the plotted range.
 
+SCA27 continuity-correction case study
+-------------------------------------
+
+``sca27_continuity_256k.csv`` is a small extracted snapshot from
+``~/presentations/SCA27-paper-data`` at commit
+``296e36a27387507442d026cb80a6f6d29665207d``. It supports the closing
+portability-tradeoff visual, not the WACCPD main-loop or module figures.
+Source: Yang et al., SCA27 manuscript, section 5.3 / figure 4.
+
+Each row retains five per-step timing samples at configuration 64, meaning
+512 × 512 columns with 100 layers in this study (its reference is 64 × 64,
+not the WACCPD configuration convention). ``source_directory`` is relative
+to that repository's ``data/raw``. The source files are
+``<prefix>_064_r1.out`` through ``<prefix>_064_r5.out``.
+Each sample is 1000 times the per-rank mean ``tavg`` of
+``(Ocean continuity correction)``, divided by ``Ocean dynamics`` hits / 2.
+The visual takes the minimum of the five samples, following the source script
+``scripts/flux_adjust_jik_compare.py``.
+
+Resources are a 104-core dual-socket Intel Xeon Platinum 8470Q node,
+one NVIDIA H200, and one AMD MI250X GCD (not a full MI250X). The AMD component
+is an experimental explicit-OpenMP port, not the complete dynamic core.
+The column-wise rewrite also moves Newton iterations into each thread and
+enables per-face early exit; it is not just loop interchange. This is a
+compiler/source portability case study, not a controlled hardware ranking.
+
+Ordinary builds read only the committed CSV. To verify or refresh the extract,
+this command prints the CSV to stdout without modifying either repository:
+
+.. code-block:: sh
+
+   python3 scripts/gen_portability_tradeoff.py \
+     --import-data ~/presentations/SCA27-paper-data
+
+
 Multi-GPU timing curves
 ----------------------
 
