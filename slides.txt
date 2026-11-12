@@ -25,10 +25,15 @@ What is MOM6?
 
    .. container:: mom6-intro-picture
 
-      .. image:: img/mom6_regional.png
-         :alt: Gulf Stream and eddies in MOM6's five-kilometer Northwest Atlantic regional configuration.
+      .. raw:: html
 
-      Gulf Stream and eddies: Northwest Atlantic, 5 km.
+         <video data-autoplay loop muted playsinline preload="metadata"
+           onmouseenter="this.controls = true" onmouseleave="this.controls = false"
+           style="width: 100%; object-fit: contain;"
+           aria-label="MOM6 ocean relative-vorticity visualization">
+           <source src="media/mom6_relvort.mp4" type="video/mp4">
+           <a href="media/mom6_relvort.mp4">Open the MOM6 ocean animation</a>.
+         </video>
 
    .. container:: mom6-intro-context
 
@@ -43,14 +48,19 @@ Accelerate the model without disrupting the science.
 
 .. container:: notes
 
-   [0:30–1:00] MOM6 is the Modular Ocean Model, an open-source community ocean
+   [30–40 seconds] MOM6 is the Modular Ocean Model, an open-source community ocean
    model used for regional and global simulations, forecasting, and climate
-   research. The image, reused from the GTC poster, shows Gulf Stream and
-   eddy structure in a 5 km Northwest Atlantic configuration. It illustrates
-   the scientific application, not the GPU timing benchmark or a claim that
-   this particular configuration is operationally deployed or GPU-validated.
+   research. Let this relative-vorticity movie, reused from the SEWG talk,
+   play while introducing the model rather than waiting for its full duration.
+   MOM6 represents a range of circulation structures, and its solvers must
+   support that diversity. This illustrates the scientific application,
+   not a claim that the movie's configuration has been GPU-ported or is the
+   double-gyre timing experiment. Source context: Adcroft et al. (2019),
+   https://doi.org/10.1029/2019MS001726. The video loops while this slide is
+   visible; hover over the movie to reveal controls if browser autoplay is blocked.
    The model supports both ongoing research and operational applications:
    it is not a disposable benchmark kernel.
+   Transition: accelerate the model without disrupting the science.
 
 
 Operational requirements
@@ -69,34 +79,10 @@ This is what the GPU port needs to preserve.
    introduction. Just state what we need here: preserve validated answers,
    CPU performance, and shared development. Save the validation results and
    reproducibility techniques for the end, after the performance results.
-
-
-An ocean of different flows
-========================================
-
-.. raw:: html
-
-   <video data-autoplay loop muted playsinline controls preload="metadata"
-     style="width: 100%; height: 490px; object-fit: contain;"
-     aria-label="MOM6 ocean relative-vorticity visualization">
-     <source src="media/mom6_relvort.mp4" type="video/mp4">
-     <a href="media/mom6_relvort.mp4">Open the MOM6 ocean animation</a>.
-   </video>
-
-Different flows — different computational demands.
-
-.. container:: notes
-
-   [1:15–1:45] Use about thirty seconds of this relative-vorticity movie,
-   reused from the SEWG talk, rather than waiting for its full duration.
-   Start with the ocean rather than the loops: MOM6 represents a range of
-   circulation structures, and its solvers must support that diversity.
-   Transition to the next slide: horizontal processes, vertical column work,
-   and their coupling expose different dependencies. This is context for the
-   model, not a claim that the movie's configuration has been GPU-ported or
-   is the double-gyre timing experiment. Source context: Adcroft et al. (2019),
-   https://doi.org/10.1029/2019MS001726. The video loops while this slide is
-   visible; use the controls if browser autoplay is blocked.
+   Bit reproducibility gives us a strong regression check during porting:
+   an unintended bit difference is something concrete to investigate,
+   without having to explain diverging trajectories after every edit.
+   It preserves a validated reference; it is not proof of physical accuracy.
 
 
 .. _solvers-ocean-intro:
@@ -627,36 +613,29 @@ Up to **6.1× on 10 H100s**, relative to one H100.
    the NVIDIA implementation.
 
 
-Bitwise reproducibility on the GPU
-==================================
+Same bits on CPU and GPU
+========================
 
-**NVIDIA CPU and GPU builds matched bitwise in three tested configurations.**
+**Bitwise agreement in three tested configurations** (NVIDIA CPU/GPU).
 
-How we preserved the answers:
+.. list-table::
+   :widths: 45 55
 
-* Retain operation order: vertical accumulation and reproducible reductions
-* Use reproducible math functions, including ``exp_repro``
-* Control floating-point transformations, including FMA contraction
-
-.. list-table:: CPU regression check: 384 × 256 × 100
-   :header-rows: 1
-   :widths: 60 40
-
-   * - Codebase
-     - Mean time/step
-   * - Production baseline
-     - 76.51 ms
-   * - GPU-enabled, on CPU
-     - 74.89 ms
-
-Ten runs each: no CPU regression in this test; mean time **2.1% lower**.
+   * - Preserve arithmetic order
+     - ``(a + b) + c ≠ a + (b + c)``
+   * - Reproducible reductions
+     - ``reproducing_sum``
+   * - Reproducible math
+     - ``exp_repro``
 
 .. container:: notes
 
    [12:15–13:15] Return to the requirements from the opening: we achieved
-   bitwise CPU/GPU agreement in the three tested configurations. This required
+   bitwise CPU/GPU agreement in the three tested configurations.
+   This required
    preserving arithmetic order, including ordered k accumulations and
-   reproducible reductions, using reproducible math such as exp_repro rather
+   reproducible reductions such as reproducing_sum, using reproducible math
+   such as exp_repro rather
    than relying on different CPU/GPU implementations of exp, and controlling
    compiler transformations such as FMA contraction. This is why some earlier
    examples kept k serial; independent k work can still be concurrent.
@@ -664,12 +643,9 @@ Ten runs each: no CPU regression in this test; mean time **2.1% lower**.
    hardware, flags, and run lengths, not universal agreement across vendors
    or optimization settings. The double gyre validates the measured dynamic
    core; two production-style configurations broaden coverage but are still
-   partial ports. GPU builds use NVIDIA HPC SDK 26.3. The separate CPU
-   regression experiment compares the two codebases on identical hardware,
-   compiler, flags, and resource layout. Ten repetitions each show no
-   regression at this representative size. Standard deviations were 0.075
-   and 0.064 ms respectively. Do not generalize this one-case result to every
-   configuration or confuse it with the cross-hardware performance comparison.
+   partial ports. GPU builds use NVIDIA HPC SDK 26.3. The arithmetic example
+   illustrates that reassociation can change floating-point results, not
+   that the two expressions always differ.
 
 
 Independence is not enough
