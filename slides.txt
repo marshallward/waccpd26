@@ -263,7 +263,7 @@ Independent columns, ordered depth
    not an individual grid point. The outer concurrent loop exposes i-j
    independence; the ordinary k loop retains the vertical dependencies of a
    column solve. Repeated muted colors distinguish columns without assigning
-   a distracting unique color to every one. The amber arrows represent
+   a distracting unique color to every one. The downward arrows represent
    ordered work, not data movement or a prescribed GPU thread layout.
    This code is a schematic pattern, not an extracted full solver.
    Real column solvers can require private work arrays and an OpenMP fallback.
@@ -277,7 +277,7 @@ Concurrent slices, ordered integration
    .. container:: loop-pattern-figure
 
       .. image:: img/loop_slices.svg
-         :alt: A highlighted i-k slab with independent columns and ordered downward accumulation; j selects independent slices.
+         :alt: A highlighted i-k slab colored by horizontal row: each i row is concurrent, with downward arrows showing ordered k integration; j selects independent slices.
 
    .. container:: loop-pattern-code
 
@@ -393,7 +393,7 @@ The blue boundary shows each GPU kernel.  The CPU steps through each block.
 
 
 Blocking changes the GPU outcome
-==================================================
+--------------------------------
 
 .. image:: img/corad_blocks.svg
    :height: 440px
@@ -420,7 +420,7 @@ CPU curves nearly overlap; GPU time drops with blocking.
 Keep the data on the device
 ===========================
 
-We have described the work. **Where does its data live?**
+Fortran does not prescribe data residency, so we use OpenMP:
 
 .. code:: fortran
 
@@ -481,27 +481,34 @@ Fixed resources, increasing problem size — **not weak scaling**.
    1024, and every case has 100 vertical levels.
 
 
-Over 3× with enough work
-========================
+Under 0.5 seconds per step
+==========================
 
 .. image:: img/dycore_and_main.svg
    :height: 465px
-   :alt: EPYC CPU and November 9 GH200 main-loop times, with GPU speedup relative to the CPU baseline.
+   :alt: Original EPYC CPU baseline and November 11 GH200 main-loop times, with GPU speedup relative to that CPU baseline.
 
-Small domains favor CPU; larger domains amortize GPU overhead.
+November 11 GH200: **0.396 s/step** at **1024 × 1024 × 100**.
+
+Original EPYC baseline retained after repeat CPU tests.
 
 .. container:: notes
 
    [8:30–9:45] The top panel shows time per step; the bottom shows CPU time
-   divided by GPU time. The GPU curve uses the November 9 run series;
+   divided by GPU time. The GPU curve uses the November 11 reference run series;
    the CPU reference is unchanged. The vertical subslide preserves the
-   August/November comparison. The module plots follow the same primary versus
+   August 9 / November 9 / November 11 comparison. The module plots follow the same primary versus
    comparison-subslide layout. Build/configuration equivalence between the GPU series
    still needs review before attributing differences to a specific change.
    Small cases provide insufficient work to keep the GPU
    occupied and amortize fixed launch costs. As the horizontal domain grows,
-   the GPU overtakes the CPU and reaches about 3.18 times the performance at
-   the largest size. The dotted vertical line marks the representative
+   the GPU reaches 395.642 milliseconds per step at the largest size. The
+   plotted ratio is about 3.89 against the original EPYC baseline. Following
+   repeated matched-flags CPU tests, the presenter is treating EPYC performance
+   as unchanged and retaining the original measurements. Colleague confirmation
+   is still pending; this is the working comparison, not an independently
+   confirmed CPU-equivalence result. The dotted vertical
+   line marks the representative
    384 by 256 by 100 production layout. This is a main-loop result for a
    dynamic-core-focused benchmark, not a claim about the throughput of a full
    coupled climate model. It is also less than a pure memory-bandwidth ratio
@@ -514,16 +521,25 @@ GH200: August and November
 
 .. image:: img/dycore_and_main_comparison.svg
    :height: 465px
-   :alt: EPYC CPU main-loop times compared with August 9 and November 9 GH200 series, plus their respective speedups against the same CPU baseline.
+   :alt: Earlier and updated November 11 AVX-512 EPYC main-loop timings compared with August 9, November 9, and November 11 GH200 series; GPU speedup ratios still use only the earlier CPU baseline.
 
-Same CPU reference; both GH200 run series.
+Updated Nov 11 CPU added; ratios use the earlier CPU baseline.
 
 .. container:: notes
 
    Optional comparison, outside the main talk's timing budget. The orange
-   August and green November curves share the same recorded CPU baseline and
+   August, green November 9, and red November 11 curves share the same recorded CPU baseline and
    per-step normalization. The colors match between timing and speedup panels.
-   At the largest common domain the speedups are about 2.74 and 3.18 times.
+   At the largest common domain the speedups are about 2.74, 3.18, and 3.89 times,
+   respectively, relative to the original CPU baseline. The presenter reports
+   repeated matched-flags CPU tests support treating EPYC performance as
+   unchanged, so the original CPU series is retained for all ratios. Colleague
+   confirmation is pending.
+   The purple EPYC November 11 curve uses the replacement AVX-512 runs,
+   reported by the presenter to use the same flags as the earlier CPU runs.
+   The mismatched-flags first test is no longer plotted. The updated CPU
+   curve appears only in the
+   timing panel, not as a GPU speedup curve, and does not replace the baseline.
    These are separate run series, not a controlled attribution of the improvement
    to a particular optimization. Press Right to continue the main talk.
 
@@ -533,14 +549,14 @@ Structure guides porting, not speedup
 
 .. image:: img/module_scaling.svg
    :height: 440px
-   :alt: EPYC CPU and November 9 GH200 timings for six dynamic-core modules across problem sizes.
+   :alt: Original EPYC CPU baseline and November 11 GH200 timings for six dynamic-core modules across problem sizes.
 
 Same source, different module performance.
 
 .. container:: notes
 
-   [9:45–11:00] The primary panels compare EPYC with the November GPU run
-   series. The vertical subslide preserves the August/November overlay.
+   [9:45–11:00] The primary panels compare EPYC with the November 11 reference GPU run
+   series. The vertical subslide preserves the August 9 / November 9 / November 11 overlay.
    Do not walk through every panel: contrast horizontal viscosity, a seemingly
    favorable layered solver, with the mixed pressure and barotropic components.
    Vertical friction also retains serial column work yet benefits from GPU
@@ -550,7 +566,7 @@ Same source, different module performance.
    performance also depends on memory access, private storage, launch counts,
    reductions, and the compiler. Integrated speedup is determined by the
    remaining costs, not an average of these module speedups. The figure is
-   regenerated from the manuscript logs; its range title now matches the
+   regenerated from the recorded logs; its range title matches the
    plotted sweep and the 64 by 64 reference grid.
 
 
@@ -559,20 +575,23 @@ Modules: August and November
 
 .. image:: img/module_scaling_comparison.svg
    :height: 440px
-   :alt: EPYC CPU timings and both August 9 and November 9 GH200 timings for six dynamic-core modules across problem sizes.
+   :alt: Earlier and updated November 11 AVX-512 EPYC timings and August 9, November 9, and November 11 GH200 timings for six dynamic-core modules across problem sizes.
 
-Same CPU reference; both GH200 run series.
+Three GPU dates + earlier and updated Nov 11 CPU timings.
 
 .. container:: notes
 
    Optional comparison, outside the main talk's timing budget. These are the
-   former three-series module panels. CPU is blue, August GPU orange, and
-   November GPU green. The original manuscript's largest-domain speedups
+   five-series module panels. Earlier CPU is blue, August GPU orange,
+   November 9 GPU green, November 11 GPU red, and updated November 11 AVX-512
+   CPU purple. The replacement CPU runs use the same flags as the earlier CPU
+   baseline, as reported by the presenter. These remain exploratory comparisons,
+   not CPU/GPU validation. The original manuscript's largest-domain speedups
    refer to August: about 1.2 times for horizontal viscosity, 1.8 for
    advection, 2 for vertical friction, 2.4 for continuity, and 7.4–7.5 for
    pressure/barotropic. Do not apply those numbers to the November curves.
    Build/configuration equivalence still needs review before attributing
-   changes between the two run series to particular optimizations.
+   changes between the three GPU run series to particular optimizations.
 
 
 The resident model extends across GPUs
@@ -687,7 +706,7 @@ One codebase, solver-aware acceleration
 
 **Preserve** ordering, validated answers, and the CPU path.
 
-Nearly **3×** single-GPU main-loop speedup;
+**0.396 s/step** on one GH200 at **1024 × 1024 × 100**;
 **6.1×** fixed-domain speedup on ten GPUs in the largest test.
 
 Next: diagnostics, parameterizations, and coupled configurations.

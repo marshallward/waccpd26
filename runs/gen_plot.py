@@ -320,7 +320,7 @@ def plot_speedup(platforms, regions, stats, output, legend_labels, figsize,
 
 def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
                              figsize, title, min_config, xscale_factor,
-                             cpu_arrows, domain_sizes=False):
+                             cpu_arrows, domain_sizes=False, timing_only_platforms=()):
     if len(platforms) < 2:
         raise ValueError('--with-speedup requires a baseline and at least one comparison directory')
     if len(regions) != 1:
@@ -341,7 +341,8 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
     ax_time.set_title(title, color=ctxt)
 
     region = regions[0]
-    cpu, *gpus = platforms
+    cpu, *comparisons = platforms
+    gpus = [p for p in comparisons if p not in timing_only_platforms]
     cpu_label = legend_labels.get(cpu, os.path.basename(os.path.normpath(cpu)))
 
     cpu_x, cpu_t = timing_series(stats, cpu, region)
@@ -352,17 +353,21 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
     ax_time.plot(cpu_x, cpu_t, '-o', label=cpu_label, color=colors[0])
     speedup_ticks = set()
     max_speedup = 0.
-    for index, gpu in enumerate(gpus, start=1):
+    for index, gpu in enumerate(comparisons, start=1):
         gpu_label = legend_labels.get(gpu, os.path.basename(os.path.normpath(gpu)))
         gpu_x, gpu_t = timing_series(stats, gpu, region)
         gpu_x, gpu_t = filter_min_config(gpu_x, gpu_t, min_config)
+        color = colors[index % len(colors)]
+        timing_only = gpu in timing_only_platforms
+        ax_time.plot(gpu_x, gpu_t, '--s' if timing_only else '-o',
+                     label=gpu_label, color=color)
+        if timing_only:
+            continue
         common = sorted(set(cpu_x).intersection(gpu_x))
         if not common:
             raise ValueError(f'no common configurations between {cpu} and {gpu}')
         gpu_map = dict(zip(gpu_x, gpu_t))
         speedup = np.array([cpu_map[x] / gpu_map[x] for x in common])
-        color = colors[index % len(colors)]
-        ax_time.plot(gpu_x, gpu_t, '-o', label=gpu_label, color=color)
         # Match comparison colors between panels; retain the old one-GPU style.
         ax_speedup.plot(common, speedup, '-o',
                         color=color if len(gpus) > 1 else colors[2])
@@ -579,11 +584,22 @@ def main():
         '--with-speedup', action='store_true',
         help='plot timings and speedup of each subsequent platform relative to the first'
     )
+    p.add_argument(
+        '--timing-only-platform', action='append', default=[], metavar='DIRECTORY',
+        help='with --with-speedup, show this platform only in the timing panel (repeatable)'
+    )
     args = p.parse_args()
 
     dark_bg = args.dark
 
     platforms = args.platforms
+    if args.timing_only_platform:
+        if not args.with_speedup:
+            p.error('--timing-only-platform requires --with-speedup')
+        if any(platform not in platforms[1:] for platform in args.timing_only_platform):
+            p.error('--timing-only-platform must name a non-baseline platform directory')
+        if all(platform in args.timing_only_platform for platform in platforms[1:]):
+            p.error('--with-speedup requires at least one speedup comparison')
     labels = next(csv.reader([args.label])) if args.label else []
     if len(labels) > len(platforms):
         p.error('more labels provided than platform directories')
@@ -612,7 +628,8 @@ def main():
         plot_timing_with_speedup(platforms, plot_regions, stats, args.output,
                                  legend_labels, figsize, args.title,
                                  args.min_config, args.xscale_factor,
-                                 args.cpu_arrows, args.domain_sizes)
+                                 args.cpu_arrows, args.domain_sizes,
+                                 args.timing_only_platform)
     elif args.speedup:
         plot_speedup(platforms, plot_regions, stats, args.output, legend_labels,
                      figsize, args.title, args.min_config, args.xscale_factor,
