@@ -27,6 +27,14 @@ Single-device comparison
    CPU main-loop time is 1597.216 ms/step, versus 1538.561 ms/step in the
    earlier baseline; these measurements do not yet demonstrate a CPU speedup.
 
+``c6_main/``
+   Additional CPU run series shown as ``CPU (c6_main)`` in both optional
+   comparison figures. Included as timing-only in the main-loop figure;
+   GPU speedup ratios continue to use the earlier CPU baseline.
+   Also shown in the primary main-loop figure as small hollow black circles
+   behind the EPYC baseline, labeled ``CPU (production code)``. These production-code
+   timings are 1.3–2.8 percent above the earlier CPU timings in the plotted sweep.
+
 ``arm_20260809/``
    One GH200 GPU.
 

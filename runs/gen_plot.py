@@ -320,7 +320,8 @@ def plot_speedup(platforms, regions, stats, output, legend_labels, figsize,
 
 def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
                              figsize, title, min_config, xscale_factor,
-                             cpu_arrows, domain_sizes=False, timing_only_platforms=()):
+                             cpu_arrows, domain_sizes=False, timing_only_platforms=(),
+                             hollow_platforms=()):
     if len(platforms) < 2:
         raise ValueError('--with-speedup requires a baseline and at least one comparison directory')
     if len(regions) != 1:
@@ -359,8 +360,14 @@ def plot_timing_with_speedup(platforms, regions, stats, output, legend_labels,
         gpu_x, gpu_t = filter_min_config(gpu_x, gpu_t, min_config)
         color = colors[index % len(colors)]
         timing_only = gpu in timing_only_platforms
-        ax_time.plot(gpu_x, gpu_t, '--s' if timing_only else '-o',
-                     label=gpu_label, color=color)
+        if gpu in hollow_platforms:
+            ax_time.plot(gpu_x, gpu_t, linestyle='none', marker='o',
+                         markersize=7, markerfacecolor='none',
+                         markeredgecolor='black', markeredgewidth=0.7,
+                         label=gpu_label, zorder=1.9)
+        else:
+            ax_time.plot(gpu_x, gpu_t, '--s' if timing_only else '-o',
+                         label=gpu_label, color=color)
         if timing_only:
             continue
         common = sorted(set(cpu_x).intersection(gpu_x))
@@ -588,11 +595,17 @@ def main():
         '--timing-only-platform', action='append', default=[], metavar='DIRECTORY',
         help='with --with-speedup, show this platform only in the timing panel (repeatable)'
     )
+    p.add_argument(
+        '--hollow-platform', action='append', default=[], metavar='DIRECTORY',
+        help='show a timing-only platform as hollow circles behind the baseline (repeatable)'
+    )
     args = p.parse_args()
 
     dark_bg = args.dark
 
     platforms = args.platforms
+    if any(platform not in args.timing_only_platform for platform in args.hollow_platform):
+        p.error('--hollow-platform must also be a --timing-only-platform')
     if args.timing_only_platform:
         if not args.with_speedup:
             p.error('--timing-only-platform requires --with-speedup')
@@ -629,7 +642,7 @@ def main():
                                  legend_labels, figsize, args.title,
                                  args.min_config, args.xscale_factor,
                                  args.cpu_arrows, args.domain_sizes,
-                                 args.timing_only_platform)
+                                 args.timing_only_platform, args.hollow_platform)
     elif args.speedup:
         plot_speedup(platforms, plot_regions, stats, args.output, legend_labels,
                      figsize, args.title, args.min_config, args.xscale_factor,

@@ -18,66 +18,86 @@ Performance-portable MOM6 on GPUs
    not a completed port of the entire production model.
 
 
-What is MOM6?
-==============
+MOM6: The Modular Ocean Model
+=============================
 
 .. container:: mom6-intro
 
    .. container:: mom6-intro-picture
 
+      **Climate**
+
       .. raw:: html
 
          <video data-autoplay loop muted playsinline preload="metadata"
            onmouseenter="this.controls = true" onmouseleave="this.controls = false"
-           style="width: 100%; object-fit: contain;"
            aria-label="MOM6 ocean relative-vorticity visualization">
            <source src="media/mom6_relvort.mp4" type="video/mp4">
            <a href="media/mom6_relvort.mp4">Open the MOM6 ocean animation</a>.
          </video>
 
-   .. container:: mom6-intro-context
+   .. container:: mom6-intro-picture
 
-      **The Modular Ocean Model**
+      **Regional**
 
-      A community ocean model for regional and global simulations,
-      forecasting, and climate research.
+      .. raw:: html
 
-      Operational code, evolving science.
-
-Accelerate the model without disrupting the science.
+         <video data-autoplay loop muted playsinline preload="metadata"
+           onmouseenter="this.controls = true" onmouseleave="this.controls = false"
+           aria-label="Regional sea-surface temperature anomaly visualization">
+           <source src="media/sst_anom_202610.mp4" type="video/mp4">
+           <a href="media/sst_anom_202610.mp4">Open the regional ocean animation</a>.
+         </video>
 
 .. container:: notes
 
    [30–40 seconds] MOM6 is the Modular Ocean Model, an open-source community ocean
    model used for regional and global simulations, forecasting, and climate
-   research. Let this relative-vorticity movie, reused from the SEWG talk,
-   play while introducing the model rather than waiting for its full duration.
+   research. The left panel shows the relative-vorticity movie reused from
+   the SEWG talk; the right shows regional sea-surface temperature anomalies.
+   Let both play while introducing the model rather than waiting for their
+   full durations.
    MOM6 represents a range of circulation structures, and its solvers must
    support that diversity. This illustrates the scientific application,
-   not a claim that the movie's configuration has been GPU-ported or is the
-   double-gyre timing experiment. Source context: Adcroft et al. (2019),
-   https://doi.org/10.1029/2019MS001726. The video loops while this slide is
-   visible; hover over the movie to reveal controls if browser autoplay is blocked.
+   not a claim that either configuration has been GPU-ported or is the
+   double-gyre timing experiment. Source context for the climate movie:
+   Adcroft et al. (2019), https://doi.org/10.1029/2019MS001726.
+   Both videos loop while this slide is visible; hover over either movie
+   to reveal controls if browser autoplay is blocked.
    The model supports both ongoing research and operational applications:
    it is not a disposable benchmark kernel.
    Transition: accelerate the model without disrupting the science.
 
 
-Operational requirements
-========================
+A GPU port for a community model
+================================
 
-* Validated answers → **bit reproducibility**
-* Ongoing CPU runs → **no CPU slowdown**
-* Shared development → **one codebase**
+Supporting operational forecasting and fundamental research around the world:
 
-This is what the GPU port needs to preserve.
+.. container:: preservation-table
+
+   .. list-table::
+      :widths: 42 58
+
+      * - **Preserve portability**
+        - Build on language-standard features
+      * - **Preserve performance**
+        - Keep production CPU runs fast
+      * - **Preserve answers**
+        - Maintain bit reproducibility
+      * - **Preserve the codebase**
+        - Support ongoing research in one codebase
+
+Accelerate the model without disrupting the science.
 
 .. container:: notes
 
-   [1:00–1:15] Provisional framing slide: try the requirements here before
-   introducing the loop patterns; move later if this interrupts the ocean
-   introduction. Just state what we need here: preserve validated answers,
-   CPU performance, and shared development. Save the validation results and
+   [20–30 seconds] MOM6 is an evolving community code with operational
+   requirements. A GPU port must preserve portability, CPU performance,
+   validated answers, and shared development. Production CPU runs cannot
+   be slowed, and researchers must be able to keep contributing to one
+   codebase. We build on standard Fortran for the work and OpenMP for data
+   management. Save the validation results and
    reproducibility techniques for the end, after the performance results.
    Bit reproducibility gives us a strong regression check during porting:
    an unintended bit difference is something concrete to investigate,
@@ -200,8 +220,6 @@ Fortran describes independent work
          enddo
 
       Every ``(i,j,k)`` iteration is independent.
-
-      Alternating colors emphasize independent cells, not execution order.
 
 ``do concurrent`` does not itself require GPU execution.
 
@@ -412,7 +430,7 @@ Fortran has no host/device model. **OpenMP manages transfers.**
    :height: 410px
    :alt: Tall host and device boxes with straight horizontal arrows, ordered top to bottom as OpenMP input copy, two do concurrent launches, an ellipsis, another do concurrent launch, and OpenMP results returned to the host. Device fields remain resident.
 
-We need **OpenMP–do concurrent interoperability**.
+We rely on **OpenMP–do concurrent interoperability**.
 
 .. container:: notes
 
@@ -472,22 +490,28 @@ Fixed resources, increasing problem size — **not weak scaling**.
    1024, and every case has 100 vertical levels.
 
 
-Under 0.5 seconds per step
-==========================
+Up to 3.9× faster on GPU
+========================
 
 .. image:: img/dycore_and_main.svg
    :height: 465px
-   :alt: Original EPYC CPU baseline and November 11 GH200 main-loop times, with GPU speedup relative to that CPU baseline.
+   :alt: Original EPYC CPU baseline and November 11 GH200 main-loop times, with hollow production-CPU circles nearly overlapping the EPYC curve. GPU speedup uses the original CPU baseline.
 
-November 11 GH200: **0.396 s/step** at **1024 × 1024 × 100**.
+**One GH200 vs one 96-core EPYC socket**, at 1024 × 1024 × 100.
 
-Original EPYC baseline retained after repeat CPU tests.
+CPU performance is retained: hollow circles show production-code timings.
 
 .. container:: notes
 
-   [8:30–9:45] The top panel shows time per step; the bottom shows CPU time
+   [8:30–9:45] Lead with the result: up to 3.9 times faster on one GH200
+   than one 96-core EPYC socket, while retaining CPU performance. The largest
+   domain is 1024 by 1024 by 100. The top panel shows time per step; the bottom shows CPU time
    divided by GPU time. The GPU curve uses the November 11 reference run series;
-   the CPU reference is unchanged. The vertical subslide preserves the
+   the CPU reference is unchanged. Hollow circles behind the EPYC curve
+   show production-code timings from c6_main: within 1.3–2.8 percent of
+   the earlier CPU timings across the plotted sizes. They are timing-only
+   markers and do not change the speedup denominator.
+   The vertical subslide preserves the
    August 9 / November 9 / November 11 comparison. The module plots follow the same primary versus
    comparison-subslide layout. Build/configuration equivalence between the GPU series
    still needs review before attributing differences to a specific change.
@@ -514,7 +538,7 @@ GH200: August and November
    :height: 465px
    :alt: Earlier and updated November 11 AVX-512 EPYC main-loop timings compared with August 9, November 9, and November 11 GH200 series; GPU speedup ratios still use only the earlier CPU baseline.
 
-Updated Nov 11 CPU added; ratios use the earlier CPU baseline.
+Nov 11 and ``c6_main`` CPU timings; ratios use the earlier CPU baseline.
 
 .. container:: notes
 
@@ -568,14 +592,14 @@ Modules: August and November
    :height: 440px
    :alt: Earlier and updated November 11 AVX-512 EPYC timings and August 9, November 9, and November 11 GH200 timings for six dynamic-core modules across problem sizes.
 
-Three GPU dates + earlier and updated Nov 11 CPU timings.
+Three GPU dates + earlier, Nov 11, and ``c6_main`` CPU timings.
 
 .. container:: notes
 
    Optional comparison, outside the main talk's timing budget. These are the
-   five-series module panels. Earlier CPU is blue, August GPU orange,
+   six-series module panels. Earlier CPU is blue, August GPU orange,
    November 9 GPU green, November 11 GPU red, and updated November 11 AVX-512
-   CPU purple. The replacement CPU runs use the same flags as the earlier CPU
+   CPU purple, and c6_main CPU brown. The replacement CPU runs use the same flags as the earlier CPU
    baseline, as reported by the presenter. These remain exploratory comparisons,
    not CPU/GPU validation. The original manuscript's largest-domain speedups
    refer to August: about 1.2 times for horizontal viscosity, 1.8 for
@@ -618,15 +642,42 @@ Same bits on CPU and GPU
 
 **Bitwise agreement in three tested configurations** (NVIDIA CPU/GPU).
 
-.. list-table::
-   :widths: 45 55
+.. container:: repro-grid
 
-   * - Preserve arithmetic order
-     - ``(a + b) + c ≠ a + (b + c)``
-   * - Reproducible reductions
-     - ``reproducing_sum``
-   * - Reproducible math
-     - ``exp_repro``
+   .. container:: repro-card
+
+      **Make arithmetic order explicit**
+
+      .. image:: img/repro_grouping.png
+         :alt: a + b + c can be grouped as (a + b) + c or a + (b + c).
+
+      Preserve grouping; prevent reassociation.
+
+   .. container:: repro-card
+
+      **Sum using fixed-precision integers**
+
+      .. image:: img/repro_bins.png
+         :alt: Schematic decomposition into six integer bins weighted by fixed powers of two.
+
+      ``reproducing_sum``: sum integer bins reproducibly.
+
+   .. container:: repro-card
+
+      **Control optimization and FMA**
+
+      .. image:: img/repro_fma.png
+         :alt: Two FMA contractions of a*b + c*d round different products separately.
+
+      Control which operations are fused.
+
+   .. container:: repro-card repro-math
+
+      **Supply reproducible transcendentals**
+
+      ``exp_repro``
+
+      Use shared math implementations for identical CPU/GPU answers.
 
 .. container:: notes
 
@@ -646,6 +697,9 @@ Same bits on CPU and GPU
    partial ports. GPU builds use NVIDIA HPC SDK 26.3. The arithmetic example
    illustrates that reassociation can change floating-point results, not
    that the two expressions always differ.
+   The grouping, integer-bin, and FMA diagrams are reused from the GTC 2026
+   poster assets. The six-bin drawing is schematic, not a specification of
+   bin widths, normalization, or overflow handling.
 
 
 Independence is not enough

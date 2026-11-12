@@ -2,6 +2,13 @@ direction: right
 grid-columns: 2
 grid-gap: 360
 style.fill: transparent
+vars: {
+  d2-config: {
+    theme-overrides: {
+      N6: transparent
+    }
+  }
+}
 
 classes: {
   memory: {
@@ -9,8 +16,8 @@ classes: {
     grid-gap: 48
     horizontal-gap: 0
     label.near: center-center
-    style.fill: "#344373"
-    style.stroke: "#aab9dc"
+    style.fill: "#49434f"
+    style.stroke: "#d5cbdc"
     style.font-color: "#ffffff"
     style.font-size: 30
     style.border-radius: 12
@@ -29,6 +36,7 @@ classes: {
     style.stroke-width: 3
   }
   launch: {
+    style.italic: false
     style.stroke: "#ffffff"
     style.font-color: "#ffffff"
     style.font-size: 24
@@ -48,8 +56,8 @@ host: HOST {
 }
 device: DEVICE {
   class: memory
-  style.fill: "#1c294e"
-  style.stroke: "#8dcffc"
+  style.fill: "#354b40"
+  style.stroke: "#b9dec5"
   in: { class: port }
   k1: { class: port }
   k2: { class: port }
@@ -60,12 +68,18 @@ device: DEVICE {
 
 # Matching grid rows give each operation its own attachment point.
 host.in -> device.in: OpenMP · copy inputs { class: transfer }
-host.k1 -> device.k1: do concurrent · launch { class: launch }
-host.k2 -> device.k2: do concurrent · launch { class: launch }
+host.k1 -> device.k1: |md
+  `do concurrent` · *launch*
+| { class: launch }
+host.k2 -> device.k2: |md
+  `do concurrent` · *launch*
+| { class: launch }
 host.more -> device.more: "…" {
   style.stroke: transparent
   style.font-color: "#ffffff"
   style.font-size: 32
 }
-host.k3 -> device.k3: do concurrent · launch { class: launch }
+host.k3 -> device.k3: |md
+  `do concurrent` · *launch*
+| { class: launch }
 host.out <- device.out: OpenMP · return results { class: transfer }
