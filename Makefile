@@ -29,7 +29,6 @@ FIGURES = $(SOLVER_FIGURES) $(LOOP_FIGURES) img/ocean_layers.svg img/block_shape
           img/module_scaling.svg img/module_scaling_comparison.svg \
             img/dycore_speedup.svg img/h100_module_timings.svg img/portability_tradeoff.svg img/device_residency.svg
 STATIC_ASSETS = img/bg_gfdl.jpg img/gyre.png img/corad_blocks.svg img/mom6_regional.png
-STATIC_ASSETS += img/repro_grouping.png img/repro_bins.png img/repro_fma.png
 
 .PHONY: all figures serve clean
 all: index.html

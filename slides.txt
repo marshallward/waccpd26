@@ -648,8 +648,16 @@ Same bits on CPU and GPU
 
       **Make arithmetic order explicit**
 
-      .. image:: img/repro_grouping.png
-         :alt: a + b + c can be grouped as (a + b) + c or a + (b + c).
+      .. raw:: html
+
+         <div class="repro-expression">
+           <code class="repro-input">a + b + c</code>
+           <svg class="repro-arrows" viewBox="0 0 500 28" aria-hidden="true">
+             <path d="M210 2 L125 24 l9 -1 m-9 1 l6 -7" />
+             <path class="repro-amber" d="M290 2 L375 24 l-9 -1 m9 1 l-6 -7" />
+           </svg>
+           <div class="repro-branches"><code>(a + b) + c</code><code>a + (b + c)</code></div>
+         </div>
 
       Preserve grouping; prevent reassociation.
 
@@ -657,8 +665,14 @@ Same bits on CPU and GPU
 
       **Sum using fixed-precision integers**
 
-      .. image:: img/repro_bins.png
-         :alt: Schematic decomposition into six integer bins weighted by fixed powers of two.
+      .. raw:: html
+
+         <div class="repro-bins">
+           <div class="repro-sum">sum(<i>a</i>) → ∑<i>a</i><sub>i</sub></div>
+           <div class="repro-bin-weights"><span>2<sup>3N</sup></span><span>2<sup>2N</sup></span><span>2<sup>N</sup></span><span>2<sup>0</sup></span><span>2<sup>−N</sup></span><span>2<sup>−2N</sup></span></div>
+           <div class="repro-bin-values"><span><i>a</i><sub>i,1</sub></span><span><i>a</i><sub>i,2</sub></span><span><i>a</i><sub>i,3</sub></span><span><i>a</i><sub>i,4</sub></span><span><i>a</i><sub>i,5</sub></span><span><i>a</i><sub>i,6</sub></span></div>
+           <div class="repro-bin-caption">Six integer bins · fixed powers of two</div>
+         </div>
 
       ``reproducing_sum``: sum integer bins reproducibly.
 
@@ -666,8 +680,17 @@ Same bits on CPU and GPU
 
       **Control optimization and FMA**
 
-      .. image:: img/repro_fma.png
-         :alt: Two FMA contractions of a*b + c*d round different products separately.
+      .. raw:: html
+
+         <div class="repro-expression">
+           <code class="repro-input">a * b + c * d</code>
+           <svg class="repro-arrows" viewBox="0 0 500 28" aria-hidden="true">
+             <path d="M210 2 L125 24 l9 -1 m-9 1 l6 -7" />
+             <path class="repro-amber" d="M290 2 L375 24 l-9 -1 m9 1 l-6 -7" />
+           </svg>
+           <div class="repro-branches"><code>fma(a,b,c*d)</code><code>fma(c,d,a*b)</code></div>
+           <div class="repro-branches repro-rounding"><span>c*d rounds first</span><span>a*b rounds first</span></div>
+         </div>
 
       Control which operations are fused.
 
@@ -697,8 +720,8 @@ Same bits on CPU and GPU
    partial ports. GPU builds use NVIDIA HPC SDK 26.3. The arithmetic example
    illustrates that reassociation can change floating-point results, not
    that the two expressions always differ.
-   The grouping, integer-bin, and FMA diagrams are reused from the GTC 2026
-   poster assets. The six-bin drawing is schematic, not a specification of
+   The grouping, integer-bin, and FMA diagrams are adapted from the GTC 2026
+   poster as native HTML and SVG. The six-bin drawing is schematic, not a specification of
    bin widths, normalization, or overflow handling.
 
 
