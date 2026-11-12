@@ -669,7 +669,7 @@ Same bits on CPU and GPU
 
          <div class="repro-reduction" role="img"
            aria-label="The sum a plus b plus c is decomposed into weighted integer bins. Each value has components weighted by two to the N, one, and two to the minus N. Corresponding bins are added column by column in any order.">
-           <div class="repro-reduction-stage"><span>Floating-point<br>sum</span><code>a + b + c + …</code></div>
+           <div class="repro-reduction-stage"><span style="white-space: nowrap;">Floating-point sum</span><code>a + b + c + …</code></div>
            <span class="repro-reduction-arrow" aria-hidden="true">→</span>
            <div class="repro-reduction-stage">
              <span>Integer bins</span>
@@ -694,21 +694,36 @@ Same bits on CPU and GPU
 
    .. container:: repro-card
 
-      **Control optimization and FMA**
+      **Control FMA contraction**
 
       .. raw:: html
 
-         <div class="repro-expression">
-           <code class="repro-input">a * b + c * d</code>
-           <svg class="repro-arrows" viewBox="0 0 500 28" aria-hidden="true">
-             <path d="M210 2 L125 24 l9 -1 m-9 1 l6 -7" />
-             <path class="repro-amber" d="M290 2 L375 24 l-9 -1 m9 1 l-6 -7" />
-           </svg>
-           <div class="repro-branches"><code>fma(a,b,c*d)</code><code>fma(c,d,a*b)</code></div>
-           <div class="repro-branches repro-rounding"><span>c*d rounds first</span><span>a*b rounds first</span></div>
-         </div>
+         <svg class="repro-fma-flow" viewBox="0 0 560 130" role="img"
+           aria-label="Two source groupings of a*b + c*d: (a*b) + c*d can lower to fma(c,d,a*b), rounding a*b first; a*b + (c*d) can lower to fma(a,b,c*d), rounding c*d first.">
+           <g fill="none" stroke="#087e8b" stroke-width="1.5">
+             <path d="M270 24 L190 39 l8 -1 m-8 1 l6 -6" />
+             <path d="M190 64 V78 l-4 -6 m4 6 l4 -6" />
+           </g>
+           <g fill="none" stroke="#b26020" stroke-width="1.5">
+             <path d="M350 24 L430 39 l-8 -1 m8 1 l-6 -6" />
+             <path d="M430 64 V78 l-4 -6 m4 6 l4 -6" />
+           </g>
+           <g fill="#12364a" font-family="monospace" font-size="20" text-anchor="middle" dominant-baseline="middle">
+             <text x="310" y="13" fill="#087e8b">a*b + c*d</text>
+             <text x="190" y="52">(a*b) + c*d</text>
+             <text x="430" y="52">a*b + (c*d)</text>
+             <text x="190" y="92">fma(c,d,a*b)</text>
+             <text x="430" y="92">fma(a,b,c*d)</text>
+           </g>
+           <g fill="#52636b" font-size="14" dominant-baseline="middle">
+             <text x="0" y="52">Source</text>
+             <text x="0" y="92">Lowering</text>
+             <text x="190" y="118" text-anchor="middle">a*b rounds first</text>
+             <text x="430" y="118" text-anchor="middle">c*d rounds first</text>
+           </g>
+         </svg>
 
-      Control which operations are fused.
+      FMA disabled in GPUs since parentheses are ignored.
 
    .. container:: repro-card repro-math
 
@@ -740,7 +755,7 @@ Same bits on CPU and GPU
            </g>
          </svg>
 
-      ``exp_repro(1)`` gives identical CPU/GPU results.
+      ``exp_repro()`` gives identical CPU/GPU results.
 
 .. container:: notes
 
@@ -751,8 +766,14 @@ Same bits on CPU and GPU
    reproducible reductions such as reproducing_sum, using reproducible math
    such as exp_repro rather
    than relying on different CPU/GPU implementations of exp, and controlling
-   compiler transformations such as FMA contraction. This is why some earlier
-   examples kept k serial; independent k work can still be concurrent.
+   compiler transformations such as FMA contraction.
+   The FMA panel shows source parentheses and possible compiler lowering,
+   not explicit fma calls in MOM6. On the GPU toolchain, parentheses do not
+   provide the required control over contraction, so GPU FMA contraction
+   is disabled. On supported CPU builds, source grouping controls which
+   product is rounded separately.
+   Preserving accumulation order is why some earlier examples kept k serial;
+   independent k work can still be concurrent.
    Bitwise matching is scoped to the tested configurations, toolchain,
    hardware, flags, and run lengths, not universal agreement across vendors
    or optimization settings. The double gyre validates the measured dynamic

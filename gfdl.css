@@ -546,7 +546,8 @@ body {
   color: #52636b;
   font-size: 0.86em;
 }
-.reveal .repro-math-flow {
+.reveal .repro-math-flow,
+.reveal .repro-fma-flow {
   display: block;
   width: 100%;
   height: 130px;
