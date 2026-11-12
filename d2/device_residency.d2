@@ -1,0 +1,71 @@
+direction: right
+grid-columns: 2
+grid-gap: 360
+style.fill: transparent
+
+classes: {
+  memory: {
+    grid-columns: 1
+    grid-gap: 48
+    horizontal-gap: 0
+    label.near: center-center
+    style.fill: "#344373"
+    style.stroke: "#aab9dc"
+    style.font-color: "#ffffff"
+    style.font-size: 30
+    style.border-radius: 12
+    style.stroke-width: 3
+  }
+  port: {
+    label: ""
+    width: 180
+    height: 12
+    style.opacity: 0
+  }
+  transfer: {
+    style.stroke: "#f5ca83"
+    style.font-color: "#f5ca83"
+    style.font-size: 24
+    style.stroke-width: 3
+  }
+  launch: {
+    style.stroke: "#8dcffc"
+    style.font-color: "#8dcffc"
+    style.font-size: 24
+    style.stroke-width: 3
+    style.stroke-dash: 5
+  }
+}
+
+host: HOST {
+  class: memory
+  in: { class: port }
+  k1: { class: port }
+  k2: { class: port }
+  more: { class: port }
+  k3: { class: port }
+  out: { class: port }
+}
+device: DEVICE {
+  class: memory
+  style.fill: "#1c294e"
+  style.stroke: "#8dcffc"
+  in: { class: port }
+  k1: { class: port }
+  k2: { class: port }
+  more: { class: port }
+  k3: { class: port }
+  out: { class: port }
+}
+
+# Matching grid rows give each operation its own attachment point.
+host.in -> device.in: OpenMP · copy inputs { class: transfer }
+host.k1 -> device.k1: do concurrent · launch { class: launch }
+host.k2 -> device.k2: do concurrent · launch { class: launch }
+host.more -> device.more: "…" {
+  style.stroke: transparent
+  style.font-color: "#8dcffc"
+  style.font-size: 32
+}
+host.k3 -> device.k3: do concurrent · launch { class: launch }
+host.out <- device.out: OpenMP · return results { class: transfer }

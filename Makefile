@@ -26,7 +26,7 @@ LOOP_FIGURES = img/loop_points.svg img/loop_columns.svg img/loop_slices.svg
 FIGURES = $(SOLVER_FIGURES) $(LOOP_FIGURES) img/ocean_layers.svg img/block_shapes.svg img/block_regions.svg img/block_loop_title.svg img/fms_mpi.svg \
           img/dycore_and_main.svg img/dycore_and_main_comparison.svg \
           img/module_scaling.svg img/module_scaling_comparison.svg \
-           img/dycore_speedup.svg img/h100_module_timings.svg img/portability_tradeoff.svg
+            img/dycore_speedup.svg img/h100_module_timings.svg img/portability_tradeoff.svg img/device_residency.svg
 STATIC_ASSETS = img/bg_gfdl.jpg img/gyre.png img/corad_blocks.svg img/mom6_regional.png
 
 .PHONY: all figures serve clean
@@ -88,6 +88,9 @@ img/ocean_layers.svg: scripts/gen_ocean_layers.py requirements.txt Makefile | im
 
 img/fms_mpi.svg: d2/fms_mpi.d2 Makefile | img
 	$(D2) $< $@ --pad 2
+
+img/device_residency.svg: d2/device_residency.d2 Makefile | img
+	$(D2) $< $@ --pad 16
 
 img/dycore_and_main.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
 	$(PYTHON) $< $(CPU_RUN) $(REFERENCE_GPU_RUN) -o $@ \

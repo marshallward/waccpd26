@@ -420,33 +420,35 @@ CPU curves nearly overlap; GPU time drops with blocking.
 Keep the data on the device
 ===========================
 
-Fortran does not prescribe data residency, so we use OpenMP:
+OpenMP owns residency; ``do concurrent`` uses an OpenACC backend.
 
-.. code:: fortran
+.. image:: img/device_residency.svg
+   :height: 410px
+   :alt: Tall host and device boxes with straight horizontal arrows, ordered top to bottom as OpenMP input copy, two do concurrent launches, an ellipsis, another do concurrent launch, and OpenMP results returned to the host. Device fields remain resident.
 
-   ! Establish residency
-   !$omp target enter data map(alloc: a) map(to: b, c)
-
-   do concurrent (k=1:nk, j=1:nj, i=1:ni)
-     a(i,j,k) = b(i,j,k) + c(i,j,k)
-   enddo
-
-   ! Return the result when needed
-   !$omp target exit data map(from: a) map(delete: b, c)
-
-In MOM6, persistent fields stay resident **across kernels**.
+**Toolchain requirement:** both must use the same device data.
 
 .. container:: notes
 
    [6:45–7:45] So far we have deliberately left out data movement. Exposing
    independent work and choosing useful blocks is not enough if every kernel
-   copies its fields back and forth. This is a compact illustration of the
-   data lifecycle, not a prescription to copy fields around every kernel.
+   copies its fields back and forth. Fortran does not prescribe data
+   residency, so we use OpenMP target enter data and target exit data to
+   manage the lifetime shown here. Inputs use map(to: b, c), output storage
+   uses map(alloc: a), and exit uses map(from: a) and map(delete: b, c).
+   Intermediate host access, when needed, can use target update without
+   ending residency. Solid gold arrows show data transfers; dashed blue
+   arrows show successive kernel launches, not copies of resident fields.
    Real model timesteps contain thousands of kernels, so those transfers
    would be devastating. Persistent fields are mapped during initialization
    and retained on the GPU. Modules manage their own temporary storage.
-   OpenMP-managed arrays must be visible to kernels generated from
-   do concurrent: interoperability is an explicit toolchain requirement.
+   The significant design decision is mixing OpenMP data management with
+   do concurrent kernels lowered through OpenACC in this toolchain.
+   Those kernels must resolve OpenMP-managed arrays to the same resident
+   device allocations. This interoperability is an explicit toolchain
+   requirement, not a guarantee of Fortran or a portable assumption about
+   arbitrary OpenMP and OpenACC implementations. The persistent fields
+   remain resident across kernels and timesteps.
    Derived types require care as well: mapping the object and its array
    components is one coordinated lifetime problem.
 
