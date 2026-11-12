@@ -420,24 +420,27 @@ CPU curves nearly overlap; GPU time drops with blocking.
 Keep the data on the device
 ===========================
 
-OpenMP owns residency; ``do concurrent`` uses an OpenACC backend.
+Fortran has no host/device model. **OpenMP manages transfers.**
 
 .. image:: img/device_residency.svg
    :height: 410px
    :alt: Tall host and device boxes with straight horizontal arrows, ordered top to bottom as OpenMP input copy, two do concurrent launches, an ellipsis, another do concurrent launch, and OpenMP results returned to the host. Device fields remain resident.
 
-**Toolchain requirement:** both must use the same device data.
+We need **OpenMP–do concurrent interoperability**.
 
 .. container:: notes
 
    [6:45–7:45] So far we have deliberately left out data movement. Exposing
    independent work and choosing useful blocks is not enough if every kernel
-   copies its fields back and forth. Fortran does not prescribe data
-   residency, so we use OpenMP target enter data and target exit data to
+   copies its fields back and forth. Standard Fortran has no notion of
+   host and device, and thus no means to explicitly control transfers
+   between them. Leaving that distinction outside the language is a
+   reasonable design choice, but we must supply this missing piece.
+   We use OpenMP target enter data and target exit data to
    manage the lifetime shown here. Inputs use map(to: b, c), output storage
    uses map(alloc: a), and exit uses map(from: a) and map(delete: b, c).
    Intermediate host access, when needed, can use target update without
-   ending residency. Solid gold arrows show data transfers; dashed blue
+   ending residency. Solid gold arrows show data transfers; dashed white
    arrows show successive kernel launches, not copies of resident fields.
    Real model timesteps contain thousands of kernels, so those transfers
    would be devastating. Persistent fields are mapped during initialization
