@@ -701,7 +701,7 @@ Same bits on CPU and GPU
       .. raw:: html
 
          <svg class="repro-math-flow" viewBox="0 0 560 130"
-           role="img" aria-label="exp calls exp_repro, which runs on CPU and GPU to produce the same result.">
+           role="img" aria-label="e to the power one, computed with exp_repro(1) on CPU and GPU, yields identical binary64 bits: 0x4005BF0A8B145769, approximately 2.71828.">
            <defs>
              <marker id="repro-math-arrow" viewBox="0 0 10 10" refX="9" refY="5"
                markerWidth="5" markerHeight="5" orient="auto-start-reverse">
@@ -709,22 +709,22 @@ Same bits on CPU and GPU
              </marker>
            </defs>
            <g fill="none" stroke="#087e8b" stroke-width="1.8" marker-end="url(#repro-math-arrow)">
-             <path d="M52 65 H85" />
-             <path d="M256 57 L314 33" />
-             <path d="M256 73 L314 97" />
-             <path d="M370 33 L420 57" />
-             <path d="M370 97 L420 73" />
+             <path d="M100 57 L190 33" />
+             <path d="M100 73 L190 97" />
+             <path d="M250 33 L320 57" />
+             <path d="M250 97 L320 73" />
            </g>
            <g fill="#12364a" font-size="22" text-anchor="middle" dominant-baseline="middle">
-             <text x="24" y="65" font-family="monospace">exp</text>
-             <text x="172" y="65" font-family="monospace">exp_repro()</text>
-             <text x="342" y="33">CPU</text>
-             <text x="342" y="97">GPU</text>
-             <text x="494" y="65">same result</text>
+             <text x="68" y="65" font-size="34" font-style="italic">e<tspan dy="-15" font-size="20" font-style="normal">1.0</tspan></text>
+             <text x="220" y="33">CPU</text>
+             <text x="220" y="97">GPU</text>
+             <text x="438" y="36" font-size="18" fill="#087e8b">Identical binary64 bits</text>
+             <text x="438" y="65" font-family="monospace" font-size="20">0x4005BF0A8B145769</text>
+             <text x="438" y="94" font-size="20">≈ 2.71828</text>
            </g>
          </svg>
 
-      ``exp_repro``: a shared implementation for identical CPU/GPU answers.
+      ``exp_repro(1)`` gives identical CPU/GPU results.
 
 .. container:: notes
 
@@ -749,6 +749,12 @@ Same bits on CPU and GPU
    bin widths, normalization, or overflow handling.
    The exp_repro diagram shows a shared implementation used on both targets
    to obtain the same bits, without depicting the approximation's internals.
+   For input 1, the displayed binary64 value was checked by compiling the
+   local MOM6 exp_repro implementation with gfortran, default real promoted
+   to 64 bits, unsafe math disabled, and FMA contraction off. It matches
+   the test constant 2.7182818284590452: bits 0x4005BF0A8B145769.
+   This local check ran on CPU; the CPU/GPU agreement claim above comes
+   from the tested model configurations.
 
 
 Independence is not enough
