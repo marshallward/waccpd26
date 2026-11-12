@@ -698,9 +698,33 @@ Same bits on CPU and GPU
 
       **Supply reproducible transcendentals**
 
-      ``exp_repro``
+      .. raw:: html
 
-      Use shared math implementations for identical CPU/GPU answers.
+         <svg class="repro-math-flow" viewBox="0 0 560 130"
+           role="img" aria-label="exp calls exp_repro, which runs on CPU and GPU to produce the same result.">
+           <defs>
+             <marker id="repro-math-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+               markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+               <path d="M0 0 L10 5 L0 10 Z" fill="#087e8b" />
+             </marker>
+           </defs>
+           <g fill="none" stroke="#087e8b" stroke-width="1.8" marker-end="url(#repro-math-arrow)">
+             <path d="M52 65 H85" />
+             <path d="M256 57 L314 33" />
+             <path d="M256 73 L314 97" />
+             <path d="M370 33 L420 57" />
+             <path d="M370 97 L420 73" />
+           </g>
+           <g fill="#12364a" font-size="22" text-anchor="middle" dominant-baseline="middle">
+             <text x="24" y="65" font-family="monospace">exp</text>
+             <text x="172" y="65" font-family="monospace">exp_repro()</text>
+             <text x="342" y="33">CPU</text>
+             <text x="342" y="97">GPU</text>
+             <text x="494" y="65">same result</text>
+           </g>
+         </svg>
+
+      ``exp_repro``: a shared implementation for identical CPU/GPU answers.
 
 .. container:: notes
 
@@ -723,6 +747,8 @@ Same bits on CPU and GPU
    The grouping, integer-bin, and FMA diagrams are adapted from the GTC 2026
    poster as native HTML and SVG. The six-bin drawing is schematic, not a specification of
    bin widths, normalization, or overflow handling.
+   The exp_repro diagram shows a shared implementation used on both targets
+   to obtain the same bits, without depicting the approximation's internals.
 
 
 Independence is not enough
