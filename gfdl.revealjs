@@ -84,9 +84,16 @@ $if(subtitle)$
 $endif$
   </div>
   <div class="title-meta">
+$if(title-authors)$
+    <div class="author">$title-authors$</div>
+$else$
 $for(author)$
     <div class="author">$author$</div>
 $endfor$
+$endif$
+$if(affiliations)$
+    <div class="affiliations">$affiliations$</div>
+$endif$
 $for(organization)$
   <!-- org has a <p> for some reason... so use <div> -->
     <div class="organization">$organization$</div>

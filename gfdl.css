@@ -442,7 +442,18 @@ body {
   font-size: 1.4em;
   line-height: 1.05;
 }
-.reveal #title-slide .title-meta { font-size: 0.62em; }
+.reveal #title-slide .title-meta {
+  align-self: flex-start;
+  max-width: 100%;
+  font-size: 0.62em;
+  text-align: left;
+}
+.reveal #title-slide .title-meta .affiliations {
+  margin-top: 12px;
+  font-size: 0.8em;
+  line-height: 1.45;
+}
+.reveal #title-slide .title-meta .author strong { color: #fff; }
 .reveal h2 { font-size: 1.35em; }
 .reveal section:not(.deck-title) > h1 { font-size: 1.45em; }
 .reveal table { font-size: 0.83em; }
