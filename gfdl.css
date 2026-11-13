@@ -120,8 +120,8 @@ body {
 .reveal #title-slide .subtitle {
   max-width: 14em;
   margin-top: 0.8em;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.8em;
+  color: #fff;
+  font-size: 1.1em;
 }
 
 .reveal #title-slide .title-meta {
@@ -437,7 +437,11 @@ body {
 }
 .reveal #title-slide .title-card { max-width: 95%; }
 .reveal #title-slide h1.title { font-size: 2.2em; }
-.reveal #title-slide .subtitle { max-width: none; }
+.reveal #title-slide .subtitle {
+  max-width: none;
+  font-size: 1.4em;
+  line-height: 1.05;
+}
 .reveal #title-slide .title-meta { font-size: 0.62em; }
 .reveal h2 { font-size: 1.35em; }
 .reveal section:not(.deck-title) > h1 { font-size: 1.45em; }

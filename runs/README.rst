@@ -78,6 +78,47 @@ and expand automatically to fit the largest measured speedup;
 module panels report time per step. Plot options and sizes follow the
 manuscript's Makefile, with the module title corrected to the plotted range.
 
+SCA27 barotropic loop-order case study
+--------------------------------------
+
+``sca27_barotropic_256k.csv`` supports the demo closing slide. It is extracted
+from the same ``SCA27-paper-data`` snapshot as the continuity data below,
+following ``scripts/barotropic_merged.py``, figure 3a and section 5.2.2 of the
+paper. Configuration 64 is 512 × 512 × 100 in this experiment.
+
+Each row stores one timing sample and its ``Ocean dynamics`` hit count.
+The source path is ``data/raw/<source_directory>/<prefix>_064_r<repeat>.out``.
+The value is 1000 times the per-rank mean ``tavg`` of
+``(Ocean barotropic mode stepping)``, divided by dynamics hits / 2.
+CPU uses the minimum of five 150-step runs on the 104-core Xeon node;
+each MI250X GCD form has one unprofiled 20-step run. The differing repeat
+counts are labeled on the figure; no confidence intervals are inferred.
+
+The original AMD form is ``mi250x-bt-data/unsure/plain``, as used in the
+paper's figure, not the distinct ``base`` directory. The alternative is
+``mi250x-bt-data/jik/plain``, without ``nowait``. CPU uses
+``cpu104-base-data`` and ``cpu104-bt-jik-data``. The whole-solver times are:
+
+* CPU j-k-i: 45.28342 ms; j-i-k: 59.19762 ms (30.7% higher time).
+* AMD j-k-i: 77.2182 ms; j-i-k: 36.2583 ms (2.13× lower time).
+
+Bars are normalized independently to each platform's original form, with
+absolute times annotated. These are source/compiler tradeoffs, not hardware
+rankings. The rewrite changes the solver's 16 j-k-i reduction loops; it does
+not mean every barotropic kernel is a vertical reduction. Both preserve the
+ordered k sum. The paper has no matching NVIDIA j-i-k experiment, so no H200
+pair is plotted. Its separate async/nowait experiments are not included.
+AMD results describe a historical explicit-OpenMP component port and tested
+compiler lowering; do not infer current-code or current-compiler behavior.
+
+Normal builds read only the committed CSV. To verify the source extraction:
+
+.. code-block:: sh
+
+   python3 scripts/gen_barotropic_tradeoff.py \
+     --import-data ~/presentations/SCA27-paper-data
+
+
 SCA27 continuity-correction case study
 -------------------------------------
 

@@ -1,0 +1,13 @@
+platform,form,source_directory,prefix,repeat,dynamics_hits,time_ms
+CPU,jki,cpu104-base-data,cpu,1,300,45.914560000
+CPU,jki,cpu104-base-data,cpu,2,300,45.555326667
+CPU,jki,cpu104-base-data,cpu,3,300,45.283420000
+CPU,jki,cpu104-base-data,cpu,4,300,46.045200000
+CPU,jki,cpu104-base-data,cpu,5,300,46.020273333
+CPU,jik,cpu104-bt-jik-data,cpu,1,300,59.197620000
+CPU,jik,cpu104-bt-jik-data,cpu,2,300,60.296866667
+CPU,jik,cpu104-bt-jik-data,cpu,3,300,60.654953333
+CPU,jik,cpu104-bt-jik-data,cpu,4,300,59.358720000
+CPU,jik,cpu104-bt-jik-data,cpu,5,300,59.724306667
+AMD,jki,mi250x-bt-data/unsure/plain,gpu,1,40,77.218200000
+AMD,jik,mi250x-bt-data/jik/plain,gpu,1,40,36.258300000

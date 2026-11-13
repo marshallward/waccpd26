@@ -3,7 +3,7 @@ WACCPD 2026 presentation draft
 
 15-minute slot: **20 main slides (including title), 14:30 of planned speech,
 0:30 margin**, plus optional dated comparisons beneath the main timing and
-module slides, a detailed-limitations subslide beneath the closing case study,
+module slides, continuity and detailed-limitations subslides beneath the closing case study,
 and six vertical backup slides under the conclusion.
 Speaker notes and elapsed-time cues are in ``slides.txt`` (reStructuredText).
 
@@ -50,7 +50,7 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates the eighteen generated SVGs. ``make clean``
+``make figures`` regenerates the twenty generated SVGs. ``make clean``
 removes those SVGs and the HTML, but preserves static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
@@ -109,6 +109,8 @@ Figure generation
      - ``scripts/gen_block_regions.py``
    * - SCA27 continuity-correction portability tradeoff
      - ``scripts/gen_portability_tradeoff.py`` and ``runs/sca27_continuity_256k.csv``
+   * - SCA27 barotropic loop-order tradeoff
+     - ``scripts/gen_barotropic_tradeoff.py`` and ``runs/sca27_barotropic_256k.csv``
    * - Moving ocean-layer schematic
      - ``scripts/gen_ocean_layers.py``, adapted from the GTC poster
    * - FMS/MPI communication diagram
@@ -129,9 +131,14 @@ GPUs: Cross-Architecture Tradeoffs in MOM6* (SCA27 manuscript), sections
 on one MI250X GCD, using a separate explicit-OpenMP source, not a complete
 AMD dynamic-core port. These references are not build dependencies and their
 timings are not mixed with the WACCPD GPU figures. The closing slide
-``Independence is not enough`` uses a separately labeled SCA27 component
-experiment; its local data snapshot and import procedure are documented in
-``runs/README.rst``. The detailed limitations are its optional vertical subslide.
+``Independence is not enough`` now demos the paper's barotropic loop-order
+experiment, with continuity correction retained as a backup subslide. These
+are historical, compiler-version-specific component studies, not evidence
+about the current branch or a cross-vendor hardware ranking. Barotropic
+compares CPU and AMD only: the paper has no matching NVIDIA loop-reorder pair.
+Async/nowait changes are excluded. Local data snapshots and import procedures
+are documented in ``runs/README.rst``. Detailed limitations remain another
+optional vertical subslide. No main slides or planned speaking time were added.
 
 All generated performance plots use sans-serif fonts, including math labels,
 with DejaVu Sans preferred. Both plotting scripts use ``--dark`` for white

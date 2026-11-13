@@ -1,8 +1,8 @@
-======================================
-Performance-portable MOM6 on GPUs
-======================================
+=============
+MOM6 on GPUs
+=============
 
-:subtitle: Standard Fortran and OpenMP
+:subtitle: Towards Portability with Standard Fortran and OpenMP
 :authors:
    - Marshall Ward
    - Edward Yang
@@ -800,6 +800,46 @@ Same bits on CPU and GPU
 Independence is not enough
 ==========================
 
+.. image:: img/barotropic_tradeoff.svg
+   :height: 475px
+   :alt: Barotropic loop order changes from j-k-i to a column-per-thread j-i-k form. At 512 by 512 by 100, CPU solver time rises from 45.3 to 59.2 ms, while one MI250X GCD falls from 77.2 to 36.3 ms. Bars are normalized to each platform's original case. No asynchronous launch change is included.
+
+Blocking tunes the work region; loop ordering can impose a tradeoff.
+
+.. container:: notes
+
+   [13:15–14:00] Demo closing slide based on the paper, not a claim about the
+   current MOM6 branch or newest AMD compiler. Return to the earlier nested
+   concurrent pattern: j slices are independent, k is ordered, and i work is
+   concurrent within each depth step. Blocking lets us tune the work region
+   without changing that solver structure. Reordering j-k-i to j-i-k instead
+   gives each thread a column, trading CPU-friendly stride-1 i traversal for
+   a simpler GPU work assignment. The paper's barotropic experiment reports
+   about 31% higher CPU time and 2.1 times lower MI250X GCD time at this size.
+   Both forms preserve the ordered vertical sums. This affects 16 reduction
+   loops within the barotropic solver; these are whole-solver clock timings,
+   not timings of only those loops.
+   The bars are normalized separately to each platform's original form, so
+   compare the transformation, not the hardware. Absolute milliseconds are
+   annotated. AMD uses one GCD, not a full MI250X. Its points are single
+   unprofiled 20-step runs; CPU values are the fastest of five 150-step runs.
+   Neither AMD form includes the separate nowait experiment, and NVIDIA's
+   asynchronous-launch results are deliberately excluded. The paper does not
+   report a matching H200 j-i-k reorder experiment, so there is no NVIDIA pair.
+   The tested amdflang lowered the split j-k-i loops into generic-mode kernels
+   with costly synchronization/register use; nvfortran lowered that form
+   differently. This is evidence about tested compiler/source combinations,
+   not a permanent AMD hardware limitation or an explanation involving caches.
+   AMD's experimental source uses explicit OpenMP. This is a component study,
+   not a complete AMD dynamic-core port or validation of unchanged do concurrent
+   on both vendors. The continuity experiment and detailed limitations are
+   optional subslides. Source: Yang et al., SCA27 manuscript, section 5.2.2,
+   figure 3a; extracted samples are in runs/sca27_barotropic_256k.csv.
+
+
+Backup: continuity correction
+-----------------------------
+
 .. image:: img/portability_tradeoff.svg
    :height: 475px
    :alt: Continuity correction changes from layer-wise worksharing to a column per thread. On a 512 by 512 by 100 grid, CPU time grows from 71 to 116 ms, H200 time falls from 49 to 26 ms, and one MI250X GCD falls from 1048 to 103 ms. Different compiler mappings produce a portability tradeoff.
@@ -808,7 +848,7 @@ Standard Fortran exposes the work; compilers determine the mapping.
 
 .. container:: notes
 
-   [13:15–14:00] One closing example of the gap between independence and an
+   Optional alternative, outside the main timing budget. An example of the gap between independence and an
    efficient mapping. This is the separate SCA27 continuity-correction study,
    not the GH200/EPYC benchmark. Layer-wise vertical sums keep i contiguous
    and k ordered, but require repeated worksharing within a Newton iteration.
@@ -826,9 +866,11 @@ Standard Fortran exposes the work; compilers determine the mapping.
    compiler, runtime, and hardware, not a controlled hardware ranking.
    The AMD component uses a separate explicit-OpenMP source; it is not a
    full AMD dynamic-core port or evidence that unchanged do concurrent works
-   equally well everywhere. Standard Fortran takes us far, but expressing
-   independence alone does not guarantee an efficient mapping with today's
-   compilers. The vertical subslide retains the detailed limitations.
+   equally well everywhere. This is a historical experiment in the paper;
+   the measured implementation may differ from the current code, and compiler
+   behavior has changed across releases. Do not infer present-day AMD behavior.
+   Standard Fortran takes us far, but expressing independence alone does not
+   guarantee an efficient mapping in the tested compiler versions.
    Source: Yang et al., SCA27 manuscript, section 5.3 and figure 4. Values are
    per-rank mean clock times per dynamics step, taking the fastest of five
    repeats separately for each platform/form. The local CSV retains all five

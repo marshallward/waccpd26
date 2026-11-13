@@ -59,9 +59,9 @@ def plot(records, output):
                         arrowprops=dict(arrowstyle="<->", color="#12364A", lw=1.5))
         fig.text(x+.14, .94, form, color=color, fontsize=17, weight="bold")
         fig.text(x+.14, .865,
-                 "Newton → k → parallel (j,i)" if form == "Layer-wise"
-                 else "parallel (j,i) → Newton → k",
-                 color=white, fontsize=12)
+                 "Newton iterations → k → parallel (j,i)" if form == "Layer-wise"
+                 else "parallel (j,i) → Newton iterations → k",
+                 color=white, fontsize=10)
         fig.text(x+.14, .795,
                  "Workshare each layer" if form == "Layer-wise"
                  else "Each thread owns a column",
