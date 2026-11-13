@@ -15,12 +15,18 @@ MOM6 on GPUs
    :sup:`3` NCI Australia · :sup:`4` SAIC
 :description: A solver-aware, single-codebase GPU port of the MOM6 dynamic core.
 :kicker: WACCPD 2026
+:title-image: img/title_equator.png
+:title-video: media/title_equator.mp4
+:title-image-alt: Panoramic equatorial crop of the MOM6 global relative-vorticity visualization.
 :preface:
    [0:00–0:30] Our question is whether a long-lived community ocean model can
    gain GPU acceleration without a separate implementation or changes to its
    validated answers. We use standard Fortran to express the parallel work and
    OpenMP to keep its data on the device. This talk focuses on the dynamic core,
    not a completed port of the entire production model.
+   The title video is an inset equatorial crop of the global visualization,
+   used for scientific context, not as evidence of a GPU-validated global run.
+   A matching still at 8 seconds is shown before playback or if autoplay is blocked.
 
 
 MOM6: The Modular Ocean Model

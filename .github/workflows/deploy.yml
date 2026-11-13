@@ -28,7 +28,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            pandoc asymptote dvisvgm \
+            pandoc asymptote dvisvgm ffmpeg \
             texlive-latex-base texlive-latex-recommended texlive-fonts-recommended \
             fonts-liberation
 

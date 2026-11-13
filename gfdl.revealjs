@@ -99,6 +99,17 @@ $for(organization)$
     <div class="organization">$organization$</div>
 $endfor$
   </div>
+$if(title-video)$
+  <video class="title-ocean" data-autoplay loop muted playsinline preload="metadata"
+    poster="$title-image$" aria-label="$title-image-alt$">
+    <source src="$title-video$" type="video/mp4">
+    <img src="$title-image$" alt="$title-image-alt$">
+  </video>
+$else$
+$if(title-image)$
+  <img class="title-ocean" src="$title-image$" alt="$title-image-alt$">
+$endif$
+$endif$
   <!-- Currently cannot add notes to a title slide, so have to do manually-->
   <aside class="notes">
     $preface$

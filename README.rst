@@ -23,7 +23,7 @@ with backgrounds enabled. Backup slides are included in the printout.
 
 Edit ``slides.txt``, then run ``make``. Build requirements: Pandoc, Python 3.13
 (as used in CI), the packages in ``requirements.txt``, D2 (0.9.0 in CI),
-Asymptote, dvisvgm, curl, tar, and
+Asymptote, dvisvgm, FFmpeg, curl, tar, and
 LaTeX with its recommended packages/fonts. Liberation fonts are used for plots
 where available. The Makefile downloads Reveal.js into ``reveal.js/`` if
 ``reveal.js/dist/reveal.js`` is missing, using version 5.2.1 pinned in
@@ -50,8 +50,9 @@ For a fresh local checkout, install the system dependencies above, then:
    python -m pip install -r requirements.txt
    make serve
 
-``make figures`` regenerates the twenty generated SVGs. ``make clean``
-removes those SVGs and the HTML, but preserves static assets and source data.
+``make figures`` regenerates the twenty generated SVGs and the title PNG.
+``make clean`` removes those generated images and the HTML, but preserves
+static assets and source data.
 It also preserves Reveal.js, so subsequent builds can work offline. To install
 a different Reveal.js version, remove ``reveal.js/`` and rebuild with
 ``make REVEAL_VERSION=<version>``.
@@ -99,6 +100,8 @@ Figure generation
      - ``runs/gen_plot.py`` and H100 ``*.out`` logs
    * - Block-shape diagram
      - ``asy/block_shapes.asy``
+   * - Equatorial title banner
+     - FFmpeg crop of ``media/mom6_relvort.mp4``; 1120 × 200 pixels from (80,270), defined by ``TITLE_CROP`` in ``Makefile``. Generates a muted looping MP4 and matching still at 8 s.
    * - Animated block traversal
      - ``scripts/gen_block_loop_title.py``
    * - Layer, column, and slice solver diagrams

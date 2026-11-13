@@ -2,9 +2,11 @@ THEME = gfdl
 PYTHON = python3
 ASY = asy
 D2 = d2
+FFMPEG = ffmpeg
 REVEAL_VERSION = 5.2.1
 MOM6_VIDEO_URL = https://marshallward.org/sewg2026/media/mom6_relvort.mp4
-MEDIA = media/mom6_relvort.mp4
+MEDIA = media/mom6_relvort.mp4 media/title_equator.mp4
+TITLE_CROP = crop=1120:200:80:270
 export MPLBACKEND = Agg
 FLAGS = -s -f rst -t revealjs --slide-level=2 \
         -V revealjs-url=./reveal.js -V theme=$(THEME) \
@@ -27,7 +29,7 @@ LOOP_FIGURES = img/loop_points.svg img/loop_columns.svg img/loop_slices.svg
 FIGURES = $(SOLVER_FIGURES) $(LOOP_FIGURES) img/ocean_layers.svg img/block_shapes.svg img/block_regions.svg img/block_loop_title.svg img/fms_mpi.svg \
           img/dycore_and_main.svg img/dycore_and_main_comparison.svg \
           img/module_scaling.svg img/module_scaling_comparison.svg \
-             img/dycore_speedup.svg img/h100_module_timings.svg img/portability_tradeoff.svg img/barotropic_tradeoff.svg img/device_residency.svg
+             img/dycore_speedup.svg img/h100_module_timings.svg img/portability_tradeoff.svg img/barotropic_tradeoff.svg img/device_residency.svg img/title_equator.png
 STATIC_ASSETS = img/bg_gfdl.jpg img/gyre.png img/corad_blocks.svg img/mom6_regional.png
 
 .PHONY: all figures serve clean
@@ -62,11 +64,20 @@ media/mom6_relvort.mp4: | media
 	  "$(MOM6_VIDEO_URL)" -o "$$tmp"; \
 	mv "$$tmp" $@
 
+media/title_equator.mp4: media/mom6_relvort.mp4 Makefile | media
+	$(FFMPEG) -hide_banner -loglevel error -i $< -an -vf '$(TITLE_CROP)' \
+	  -c:v libx264 -crf 23 -preset medium -pix_fmt yuv420p -movflags +faststart -y $@
+
 media:
 	mkdir -p $@
 
 img/block_shapes.svg: asy/block_shapes.asy Makefile | img
 	$(ASY) -f svg $< -o $(basename $@)
+
+# Matching poster frame; inset crop excludes the globe's curved edges.
+img/title_equator.png: media/mom6_relvort.mp4 Makefile | img
+	$(FFMPEG) -hide_banner -loglevel error -ss 8 -i $< -frames:v 1 \
+	  -vf '$(TITLE_CROP)' -update 1 -y $@
 
 img/block_regions.svg: scripts/gen_block_regions.py requirements.txt Makefile | img
 	$(PYTHON) $< -o $@
