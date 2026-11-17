@@ -8,7 +8,8 @@ MOM6 on GPUs
    - Edward Yang
    - Jorge Gálvez Vallejo
    - Utheri Wagura
-:title-authors: **Marshall Ward**\ :sup:`1` · Edward Yang\ :sup:`2` · Jorge Gálvez Vallejo\ :sup:`3` · Utheri Wagura\ :sup:`4`
+:title-authors: **Marshall Ward**\ :sup:`1` · Edward Yang\ :sup:`2` · Jorge
+                Gálvez Vallejo\ :sup:`3` · Utheri Wagura\ :sup:`4`
 :affiliations:
    :sup:`1` NOAA Geophysical Fluid Dynamics Laboratory · :sup:`2` ACCESS-NRI
 
