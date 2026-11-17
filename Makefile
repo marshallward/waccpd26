@@ -115,21 +115,20 @@ img/dycore_and_main.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt
 	  --title "Time per step (ms) for the MOM6 timestep"
 
 img/dycore_and_main_comparison.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
-	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) $(NOV9_GPU_RUN) $(REFERENCE_GPU_RUN) $(UPDATED_CPU_RUN) $(MAIN_CPU_RUN) -o $@ \
-	  -l "EPYC 9654 (earlier baseline),NVIDIA GH200 (Aug 9),NVIDIA GH200 (Nov 9),NVIDIA GH200 (Nov 11),EPYC 9654 (Nov 11; AVX-512),CPU (c6_main)" --figsize 3.5,3.0 --dark \
+	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) $(NOV9_GPU_RUN) $(REFERENCE_GPU_RUN) -o $@ \
+	  -l "EPYC 9654,NVIDIA GH200 (Aug 9),NVIDIA GH200 (Nov 9),NVIDIA GH200 (Nov 11)" --figsize 3.5,3.0 --dark \
 	  --regions "Main loop" --with-speedup --min-config 4 --domain-sizes \
-	  --timing-only-platform $(UPDATED_CPU_RUN) --timing-only-platform $(MAIN_CPU_RUN) \
 	  --title "Time per step (ms) for the MOM6 timestep"
 
 img/module_scaling.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
 	$(PYTHON) $< $(CPU_RUN) $(REFERENCE_GPU_RUN) -o $@ \
-	  -l "EPYC 9654 (earlier baseline),GH200" --figsize 7.2,3.8 --dark \
+	  -l "EPYC 9654,GH200" --figsize 7.2,3.8 --dark \
 	  --min-config 4 --xscale-factor 4 \
 	  --title "Time per step (ms) from 64×64 to 1024×1024"
 
 img/module_scaling_comparison.svg: runs/gen_plot.py $(SINGLE_DEVICE_DATA) requirements.txt Makefile | img
-	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) $(NOV9_GPU_RUN) $(REFERENCE_GPU_RUN) $(UPDATED_CPU_RUN) $(MAIN_CPU_RUN) -o $@ \
-	  -l "EPYC 9654 (earlier baseline),GH200 (Aug 9),GH200 (Nov 9),GH200 (Nov 11),EPYC 9654 (Nov 11; AVX-512),CPU (c6_main)" --figsize 7.2,3.8 --dark \
+	$(PYTHON) $< $(CPU_RUN) $(GPU_RUN) $(NOV9_GPU_RUN) $(REFERENCE_GPU_RUN) -o $@ \
+	  -l "EPYC 9654,GH200 (Aug 9),GH200 (Nov 9),GH200 (Nov 11)" --figsize 7.2,3.8 --dark \
 	  --min-config 4 --xscale-factor 4 \
 	  --title "Time per step (ms) from 64×64 to 1024×1024"
 
