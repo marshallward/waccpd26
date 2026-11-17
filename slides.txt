@@ -222,8 +222,6 @@ Fortran describes independent work
 
    .. container:: loop-pattern-code
 
-      **Independent grid points**
-
       .. code:: fortran
 
          do concurrent (k=1:nk, j=1:nj, i=1:ni)
@@ -509,8 +507,6 @@ Up to 3.9× faster on GPU
    :alt: Original EPYC CPU baseline and November 11 GH200 main-loop times, with hollow production-CPU circles nearly overlapping the EPYC curve. GPU speedup uses the original CPU baseline.
 
 **One GH200 vs one 96-core EPYC socket**, at 1024 × 1024 × 100.
-
-CPU performance is retained: hollow circles show production-code timings.
 
 .. container:: notes
 
