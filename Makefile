@@ -30,6 +30,7 @@ FIGURES = $(SOLVER_FIGURES) $(LOOP_FIGURES) img/ocean_layers.svg img/block_shape
           img/dycore_and_main.svg img/dycore_and_main_comparison.svg \
           img/module_scaling.svg img/module_scaling_comparison.svg \
              img/dycore_speedup.svg img/h100_module_timings.svg img/portability_tradeoff.svg img/barotropic_tradeoff.svg img/device_residency.svg img/title_equator.png
+FIGURES += img/viscosity_comparison.svg
 STATIC_ASSETS = img/bg_gfdl.jpg img/gyre.png img/corad_blocks.svg img/mom6_regional.png
 
 .PHONY: all figures serve clean
@@ -86,6 +87,9 @@ img/portability_tradeoff.svg: scripts/gen_portability_tradeoff.py runs/sca27_con
 	$(PYTHON) $< -o $@
 
 img/barotropic_tradeoff.svg: scripts/gen_barotropic_tradeoff.py runs/sca27_barotropic_256k.csv requirements.txt Makefile | img
+	$(PYTHON) $< -o $@
+
+img/viscosity_comparison.svg: scripts/gen_viscosity_comparison.py runs/sca27_viscosity.csv requirements.txt | img
 	$(PYTHON) $< -o $@
 
 img/block_loop_title.svg: scripts/gen_block_loop_title.py Makefile | img

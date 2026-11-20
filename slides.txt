@@ -307,8 +307,8 @@ Concurrent slices, ordered integration
            enddo
          enddo
 
-      Concurrent ``j`` slices and ``i`` columns;
-      serial accumulation in ``k``.
+      | Concurrent ``j`` slices and ``i`` columns
+      | Serial accumulation in ``k``
 
 .. container:: notes
 
@@ -438,7 +438,7 @@ Fortran has no host/device model. **OpenMP manages transfers.**
 
 .. image:: img/device_residency.svg
    :height: 410px
-   :alt: Tall host and device boxes with straight horizontal arrows, ordered top to bottom as OpenMP input copy, two do concurrent launches, an ellipsis, another do concurrent launch, and OpenMP results returned to the host. Device fields remain resident.
+   :alt: Tall host and device boxes with gold OpenMP arrows animated toward the device for input copies and toward the host for returned results. Static white arrows show do concurrent launches between transfers. Device fields remain resident.
 
 We rely on **OpenMP–do concurrent interoperability**.
 
@@ -454,7 +454,7 @@ We rely on **OpenMP–do concurrent interoperability**.
    manage the lifetime shown here. Inputs use map(to: b, c), output storage
    uses map(alloc: a), and exit uses map(from: a) and map(delete: b, c).
    Intermediate host access, when needed, can use target update without
-   ending residency. Solid gold arrows show data transfers; dashed white
+   ending residency. Moving gold arrows show data transfers; solid white
    arrows show successive kernel launches, not copies of resident fields.
    Real model timesteps contain thousands of kernels, so those transfers
    would be devastating. Persistent fields are mapped during initialization
@@ -500,7 +500,7 @@ Fixed resources, increasing problem size — **not weak scaling**.
    1024, and every case has 100 vertical levels.
 
 
-Up to 3.9× faster on GPU
+Up to 4× faster on GPU
 ========================
 
 .. image:: img/dycore_and_main.svg
@@ -805,8 +805,44 @@ Same bits on CPU and GPU
    from the tested model configurations.
 
 
+CPU, NVIDIA, and AMD
+====================
+
+**Vertical viscosity:** the same column-wise solver on three platforms.
+
+.. image:: img/viscosity_comparison.svg
+   :height: 420px
+   :alt: Vertical-viscosity time per step versus horizontal grid size for a CPU node, one NVIDIA H200, and one AMD MI250X GCD. Original private-array solver only. At 512 squared by 100 layers, times are 93.8, 50.2, and 67.0 ms respectively.
+
+.. container:: notes
+
+   [13:15–14:00] Introduce AMD with the simplest component result from the
+   SCA27 paper: vertical viscosity, section 5.1 and figure 2, using the
+   original private-column-array form (solid curves). Each thread works
+   through a column, retaining the ordered vertical operations. The paper
+   reports no significant solver changes needed for the AMD version.
+   H200 outperforms the CPU node from 32K columns upward; at 256K columns,
+   one MI250X GCD takes about 1.3 times the H200 solver time
+   (67.0 versus 50.2 ms; CPU 93.8 ms).
+   The CPU node has two 52-core Intel Xeon 8470Q processors, using MPI;
+   both GPU versions use OpenMP for this solver's private work arrays.
+   AMD is one compute die of an MI250X, not the whole GPU. The tested AMD
+   compiler needed runtime stack and scratch settings for the private arrays.
+   This is a selected-component result, not a complete AMD dynamic-core
+   port. Source and compiler details: SCA27 sections 4.3–4.4 and 5.1.
+   These are the paper's experiments, separate from this talk's GH200/EPYC
+   measurements. Figure 2 also includes an alternative array layout; keep
+   that experiment out of this introduction. The two existing computation
+   tradeoff examples are available as optional subslides.
+   Curves are regenerated from the GTC snapshot assets/sca_cases.json:
+   viscosity baseline rows, fastest of five repeats at every point, per-rank
+   mean clock time per dynamics step. CPU uses 100 ranks at the smallest
+   grid and 104 elsewhere. AMD stops at 512 squared because of GCD memory.
+   Local data: runs/sca27_viscosity.csv; source: SCA27 figure 2.
+
+
 Independence is not enough
-==========================
+--------------------------
 
 .. image:: img/barotropic_tradeoff.svg
    :height: 475px
@@ -816,7 +852,7 @@ Blocking tunes the work region; loop ordering can impose a tradeoff.
 
 .. container:: notes
 
-   [13:15–14:00] Demo closing slide based on the paper, not a claim about the
+   Optional detail, outside the main timing budget. Based on the paper, not a claim about the
    current MOM6 branch or newest AMD compiler. Return to the earlier nested
    concurrent pattern: j slices are independent, k is ordered, and i work is
    concurrent within each depth step. Blocking lets us tune the work region
@@ -931,29 +967,32 @@ AMD: experimental OpenMP source, not yet a complete dynamic-core port.
    study are merged into this talk's WACCPD comparisons.
 
 
-One codebase, solver-aware acceleration
-=======================================
+Conclusions
+===========
 
-**Express** independence with standard Fortran.
+* GPU porting with **language-standard Fortran and OpenMP**.
 
-**Manage** residency and communication explicitly.
+* **Bitwise reproducibility** between CPU and GPU.
 
-**Preserve** ordering, validated answers, and the CPU path.
+* **Significant performance improvements**.
 
-**0.396 s/step** on one GH200 at **1024 × 1024 × 100**;
-**6.1×** fixed-domain speedup on ten GPUs in the largest test.
+  * Up to 4x speedup vs production runs
+  * Signs of efficiency MPI scaling (without RDMA)
 
-Next: diagnostics, parameterizations, and coupled configurations.
-
+Current work focuses on physics, coupling, IO, and porting
+to AMD & Intel
+  
 .. container:: notes
 
-   [14:00–14:30] The main conclusion is that production-model acceleration
-   is not a single-loop transformation. Standard Fortran supplies the central
-   expression of concurrency, but residency, ordered work, blocking, compiler
-   behavior, and validation make the whole model viable. The dynamic core
-   demonstrates acceleration without maintaining a second solver source.
-   Extending this to diagnostics and more complex parameterizations is the
-   next step toward coupled production configurations. Thank the collaborators
+   [14:00–14:30] Close with three results. First, we ported the MOM6 dynamic
+   core using language-standard Fortran, with OpenMP where needed.
+   Second, we preserved bitwise CPU/GPU agreement in the three tested
+   configurations through ordered arithmetic, reproducible math and
+   reductions, and compiler controls. Third, the port delivers significant
+   performance improvements: 0.396 seconds per step on one GH200 for
+   1024 by 1024 by 100, and 6.1 times fixed-domain speedup from one to ten
+   GPUs in the largest scaling test. The latter is GPU scaling, not a
+   CPU-to-GPU speedup. Thank the collaborators
    and invite questions. Planned spoken content is 14 minutes 30 seconds,
    leaving 30 seconds within a 15-minute slot. If questions must fit inside
    the slot, omit the traversal animation and compress the module breakdown.

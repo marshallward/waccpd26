@@ -78,6 +78,21 @@ and expand automatically to fit the largest measured speedup;
 module panels report time per step. Plot options and sizes follow the
 manuscript's Makefile, with the module title corrected to the plotted range.
 
+SCA27 vertical-viscosity comparison
+----------------------------------
+
+``sca27_viscosity.csv`` contains the three original private-array curves
+from SCA27 section 5.1 / figure 2. Copied from
+``~/presentations/gtc2026/assets/sca_cases.json``, selecting ``viscosity``
+and ``baseline`` only, with milliseconds rounded to six decimal places.
+The snapshot uses the fastest of five repeats per point: per-rank mean
+clock time divided by dynamics hits / 2, converted to milliseconds.
+All grids have 100 layers. CPU is a dual 52-core Intel 8470Q node
+(100 ranks at 4096 columns, 104 otherwise); NVIDIA is one H200;
+AMD is one MI250X GCD, with its sweep ending at 262144 columns.
+See the GTC ``scripts/sca_cases.py`` for the original log selection.
+The alternative shared-array experiment is omitted.
+
 SCA27 barotropic loop-order case study
 --------------------------------------
 
